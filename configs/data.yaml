@@ -1,0 +1,11 @@
+underlying:
+  tickers: ["SPY", "QQQ"]
+  start_date: "2005-01-01"
+  end_date: null  # null = through latest available
+  source: "yfinance"
+  raw_path: "data/raw/underlying"
+
+options:
+  # Populated in Phase 2 once a real historical option chain source is configured.
+  source: null
+  raw_path: "data/raw/options"

@@ -1,0 +1,13 @@
+# Populated in Phase 3 (Probability Model). Left as a stub during Phase 1.
+walk_forward:
+  initial_train_years: 6
+  test_window_years: 1
+  expanding: true
+
+models:
+  - dummy
+  - logistic_regression
+  - random_forest
+
+calibration:
+  method: "isotonic"  # or "sigmoid"

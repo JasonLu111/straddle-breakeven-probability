@@ -1,0 +1,22 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+.env
+*.egg-info/
+
+# raw/interim/processed data can be large or licensed (real option chain data) - never commit
+data/raw/**
+data/interim/**
+data/processed/**
+!data/raw/underlying/.gitkeep
+!data/raw/options/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+
+.DS_Store
+Thumbs.db
+
+# Claude Code local session config - not part of the research project
+.claude/

@@ -1,0 +1,30 @@
+realized_volatility:
+  windows: [10, 20, 60]
+  annualization_factor: 252
+  percentile_lookback: 252
+
+bollinger_band:
+  window: 20
+  num_std: 2
+  percentile_lookback: 252
+
+atr:
+  window: 14
+  percentile_lookback: 252
+
+range:
+  windows: [10, 20]
+
+momentum:
+  windows: [5, 20]
+  ma_window: 20
+
+compression_regime:
+  primary_threshold: 0.20      # main specification, pre-registered
+  sensitivity_thresholds: [0.10, 0.20, 0.30]
+  rules:
+    - rv_20_percentile
+    - bb_width_percentile
+
+forward_horizons:
+  days: [10, 20]

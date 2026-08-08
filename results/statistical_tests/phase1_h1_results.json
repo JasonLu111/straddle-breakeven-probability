@@ -1,0 +1,458 @@
+[
+  {
+    "ticker": "SPY",
+    "horizon_days": 10,
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0309157843,
+    "group_n_treatment": 234,
+    "group_n_control": 4918,
+    "group_mean_treatment": 0.0172882575,
+    "group_mean_control": 0.0240044295,
+    "group_median_treatment": 0.0164260033,
+    "group_median_control": 0.0181705828,
+    "group_mean_difference": -0.006716172,
+    "group_mean_difference_ci": [
+      -0.0084693161,
+      -0.0048950997
+    ],
+    "group_welch_t_stat": -7.4598955317,
+    "group_welch_p_value": 0.0,
+    "group_mannwhitney_u_stat": 498856.0,
+    "group_mannwhitney_p_value": 0.000574226,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 234,
+    "prob_p_unconditional": 0.2597049689,
+    "prob_p_unconditional_ci": [
+      0.2480541537,
+      0.2715450311
+    ],
+    "prob_p_conditional": 0.1282051282,
+    "prob_p_conditional_ci": [
+      0.0854700855,
+      0.1709401709
+    ],
+    "prob_probability_difference": -0.1314998407,
+    "prob_probability_ratio": 0.4936568165,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "SPY",
+    "horizon_days": 10,
+    "compression_threshold_pct": 20,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0309157843,
+    "group_n_treatment": 606,
+    "group_n_control": 4546,
+    "group_mean_treatment": 0.0185084082,
+    "group_mean_control": 0.0243913641,
+    "group_median_treatment": 0.016575448,
+    "group_median_control": 0.0182614843,
+    "group_mean_difference": -0.0058829559,
+    "group_mean_difference_ci": [
+      -0.0071520594,
+      -0.0045491146
+    ],
+    "group_welch_t_stat": -8.730413413,
+    "group_welch_p_value": 8.238229479e-18,
+    "group_mannwhitney_u_stat": 1236617.0,
+    "group_mannwhitney_p_value": 4.23519e-05,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 606,
+    "prob_p_unconditional": 0.2597049689,
+    "prob_p_unconditional_ci": [
+      0.2480541537,
+      0.2715450311
+    ],
+    "prob_p_conditional": 0.1650165017,
+    "prob_p_conditional_ci": [
+      0.1353135314,
+      0.1947194719
+    ],
+    "prob_probability_difference": -0.0946884673,
+    "prob_probability_ratio": 0.6353998629,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "SPY",
+    "horizon_days": 10,
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0309157843,
+    "group_n_treatment": 1067,
+    "group_n_control": 4085,
+    "group_mean_treatment": 0.0191628295,
+    "group_mean_control": 0.0248843323,
+    "group_median_treatment": 0.0166058198,
+    "group_median_control": 0.0183185445,
+    "group_mean_difference": -0.0057215028,
+    "group_mean_difference_ci": [
+      -0.0069150254,
+      -0.0045221334
+    ],
+    "group_welch_t_stat": -9.2954929025,
+    "group_welch_p_value": 2.83131777e-20,
+    "group_mannwhitney_u_stat": 1964179.0,
+    "group_mannwhitney_p_value": 6.576e-07,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 1067,
+    "prob_p_unconditional": 0.2597049689,
+    "prob_p_unconditional_ci": [
+      0.2480541537,
+      0.2715450311
+    ],
+    "prob_p_conditional": 0.1808809747,
+    "prob_p_conditional_ci": [
+      0.1583645736,
+      0.2043111528
+    ],
+    "prob_probability_difference": -0.0788239942,
+    "prob_probability_ratio": 0.6964863839,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "SPY",
+    "horizon_days": 20,
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0437965525,
+    "group_n_treatment": 234,
+    "group_n_control": 4908,
+    "group_mean_treatment": 0.0259706992,
+    "group_mean_control": 0.0349085451,
+    "group_median_treatment": 0.02487336,
+    "group_median_control": 0.0278638702,
+    "group_mean_difference": -0.0089378459,
+    "group_mean_difference_ci": [
+      -0.0112469861,
+      -0.0066342119
+    ],
+    "group_welch_t_stat": -7.4818269853,
+    "group_welch_p_value": 0.0,
+    "group_mannwhitney_u_stat": 502617.0,
+    "group_mannwhitney_p_value": 0.0012461412,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 234,
+    "prob_p_unconditional": 0.2609879424,
+    "prob_p_unconditional_ci": [
+      0.2487359004,
+      0.2728510307
+    ],
+    "prob_p_conditional": 0.1282051282,
+    "prob_p_conditional_ci": [
+      0.0854700855,
+      0.1709401709
+    ],
+    "prob_probability_difference": -0.1327828142,
+    "prob_probability_ratio": 0.4912300814,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "SPY",
+    "horizon_days": 20,
+    "compression_threshold_pct": 20,
+    "is_primary_spec": true,
+    "large_move_event_threshold": 0.0437965525,
+    "group_n_treatment": 606,
+    "group_n_control": 4536,
+    "group_mean_treatment": 0.0289681025,
+    "group_mean_control": 0.0352410963,
+    "group_median_treatment": 0.02689496,
+    "group_median_control": 0.027812823,
+    "group_mean_difference": -0.0062729938,
+    "group_mean_difference_ci": [
+      -0.0081335741,
+      -0.0044147195
+    ],
+    "group_welch_t_stat": -6.638908707,
+    "group_welch_p_value": 0.0,
+    "group_mannwhitney_u_stat": 1292914.0,
+    "group_mannwhitney_p_value": 0.0175830647,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 606,
+    "prob_p_unconditional": 0.2609879424,
+    "prob_p_unconditional_ci": [
+      0.2487359004,
+      0.2728510307
+    ],
+    "prob_p_conditional": 0.1732673267,
+    "prob_p_conditional_ci": [
+      0.1435643564,
+      0.204620462
+    ],
+    "prob_probability_difference": -0.0877206157,
+    "prob_probability_ratio": 0.6638901595,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "SPY",
+    "horizon_days": 20,
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0437965525,
+    "group_n_treatment": 1067,
+    "group_n_control": 4075,
+    "group_mean_treatment": 0.0291857764,
+    "group_mean_control": 0.0358937569,
+    "group_median_treatment": 0.0266629968,
+    "group_median_control": 0.0280908219,
+    "group_mean_difference": -0.0067079805,
+    "group_mean_difference_ci": [
+      -0.0083117299,
+      -0.0051334411
+    ],
+    "group_welch_t_stat": -8.0870148686,
+    "group_welch_p_value": 8.874694114e-16,
+    "group_mannwhitney_u_stat": 2033352.0,
+    "group_mannwhitney_p_value": 0.0011203477,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 1067,
+    "prob_p_unconditional": 0.2609879424,
+    "prob_p_unconditional_ci": [
+      0.2487359004,
+      0.2728510307
+    ],
+    "prob_p_conditional": 0.1790065604,
+    "prob_p_conditional_ci": [
+      0.1565135895,
+      0.2024367385
+    ],
+    "prob_probability_difference": -0.081981382,
+    "prob_probability_ratio": 0.6858805766,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 10,
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0404340268,
+    "group_n_treatment": 238,
+    "group_n_control": 4914,
+    "group_mean_treatment": 0.0241745954,
+    "group_mean_control": 0.0300766513,
+    "group_median_treatment": 0.0214772422,
+    "group_median_control": 0.0237077574,
+    "group_mean_difference": -0.005902056,
+    "group_mean_difference_ci": [
+      -0.0082633365,
+      -0.0034043054
+    ],
+    "group_welch_t_stat": -4.8524444044,
+    "group_welch_p_value": 1.9963e-06,
+    "group_mannwhitney_u_stat": 525939.0,
+    "group_mannwhitney_p_value": 0.0086651736,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 238,
+    "prob_p_unconditional": 0.2564052795,
+    "prob_p_unconditional_ci": [
+      0.2447593168,
+      0.268439441
+    ],
+    "prob_p_conditional": 0.1890756303,
+    "prob_p_conditional_ci": [
+      0.1428571429,
+      0.2394957983
+    ],
+    "prob_probability_difference": -0.0673296493,
+    "prob_probability_ratio": 0.7374092711,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 10,
+    "compression_threshold_pct": 20,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0404340268,
+    "group_n_treatment": 515,
+    "group_n_control": 4637,
+    "group_mean_treatment": 0.0271454451,
+    "group_mean_control": 0.0300992698,
+    "group_median_treatment": 0.0233092798,
+    "group_median_control": 0.0236383821,
+    "group_mean_difference": -0.0029538247,
+    "group_mean_difference_ci": [
+      -0.0049153167,
+      -0.0009887411
+    ],
+    "group_welch_t_stat": -2.9829696354,
+    "group_welch_p_value": 0.0029515202,
+    "group_mannwhitney_u_stat": 1159098.5,
+    "group_mannwhitney_p_value": 0.2753905266,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 515,
+    "prob_p_unconditional": 0.2564052795,
+    "prob_p_unconditional_ci": [
+      0.2447593168,
+      0.268439441
+    ],
+    "prob_p_conditional": 0.2310679612,
+    "prob_p_conditional_ci": [
+      0.1941747573,
+      0.267961165
+    ],
+    "prob_probability_difference": -0.0253373183,
+    "prob_probability_ratio": 0.9011825404,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": false
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 10,
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0404340268,
+    "group_n_treatment": 904,
+    "group_n_control": 4248,
+    "group_mean_treatment": 0.0264895661,
+    "group_mean_control": 0.030509334,
+    "group_median_treatment": 0.0226673683,
+    "group_median_control": 0.0238398786,
+    "group_mean_difference": -0.0040197679,
+    "group_mean_difference_ci": [
+      -0.0055097882,
+      -0.0024554935
+    ],
+    "group_welch_t_stat": -5.1289468884,
+    "group_welch_p_value": 3.248e-07,
+    "group_mannwhitney_u_stat": 1825826.5,
+    "group_mannwhitney_p_value": 0.0202644,
+    "prob_n_total": 5152,
+    "prob_n_condition_true": 904,
+    "prob_p_unconditional": 0.2564052795,
+    "prob_p_unconditional_ci": [
+      0.2447593168,
+      0.268439441
+    ],
+    "prob_p_conditional": 0.2090707965,
+    "prob_p_conditional_ci": [
+      0.1825221239,
+      0.235619469
+    ],
+    "prob_probability_difference": -0.047334483,
+    "prob_probability_ratio": 0.8153919329,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 20,
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0577311046,
+    "group_n_treatment": 238,
+    "group_n_control": 4904,
+    "group_mean_treatment": 0.0376050315,
+    "group_mean_control": 0.0434472383,
+    "group_median_treatment": 0.0330551172,
+    "group_median_control": 0.0363774633,
+    "group_mean_difference": -0.0058422068,
+    "group_mean_difference_ci": [
+      -0.0094106631,
+      -0.0022681817
+    ],
+    "group_welch_t_stat": -3.1921187758,
+    "group_welch_p_value": 0.0015726787,
+    "group_mannwhitney_u_stat": 544990.0,
+    "group_mannwhitney_p_value": 0.0844890495,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 238,
+    "prob_p_unconditional": 0.2557370673,
+    "prob_p_unconditional_ci": [
+      0.243873979,
+      0.2676001556
+    ],
+    "prob_p_conditional": 0.2352941176,
+    "prob_p_conditional_ci": [
+      0.1848739496,
+      0.2899159664
+    ],
+    "prob_probability_difference": -0.0204429496,
+    "prob_probability_ratio": 0.9200626258,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": false
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 20,
+    "compression_threshold_pct": 20,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0577311046,
+    "group_n_treatment": 515,
+    "group_n_control": 4627,
+    "group_mean_treatment": 0.0375088942,
+    "group_mean_control": 0.0438076883,
+    "group_median_treatment": 0.033821847,
+    "group_median_control": 0.0365203863,
+    "group_mean_difference": -0.0062987941,
+    "group_mean_difference_ci": [
+      -0.008824448,
+      -0.0037370723
+    ],
+    "group_welch_t_stat": -4.8209604902,
+    "group_welch_p_value": 1.7299e-06,
+    "group_mannwhitney_u_stat": 1107981.0,
+    "group_mannwhitney_p_value": 0.0090027809,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 515,
+    "prob_p_unconditional": 0.2557370673,
+    "prob_p_unconditional_ci": [
+      0.243873979,
+      0.2676001556
+    ],
+    "prob_p_conditional": 0.213592233,
+    "prob_p_conditional_ci": [
+      0.1786407767,
+      0.2504854369
+    ],
+    "prob_probability_difference": -0.0421448343,
+    "prob_probability_ratio": 0.8352024807,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  },
+  {
+    "ticker": "QQQ",
+    "horizon_days": 20,
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "large_move_event_threshold": 0.0577311046,
+    "group_n_treatment": 904,
+    "group_n_control": 4238,
+    "group_mean_treatment": 0.0373915208,
+    "group_mean_control": 0.0444108824,
+    "group_median_treatment": 0.0338805346,
+    "group_median_control": 0.0367880608,
+    "group_mean_difference": -0.0070193616,
+    "group_mean_difference_ci": [
+      -0.0090275688,
+      -0.0049267167
+    ],
+    "group_welch_t_stat": -6.7012214645,
+    "group_welch_p_value": 0.0,
+    "group_mannwhitney_u_stat": 1775796.0,
+    "group_mannwhitney_p_value": 0.0005615431,
+    "prob_n_total": 5142,
+    "prob_n_condition_true": 904,
+    "prob_p_unconditional": 0.2557370673,
+    "prob_p_unconditional_ci": [
+      0.243873979,
+      0.2676001556
+    ],
+    "prob_p_conditional": 0.1946902655,
+    "prob_p_conditional_ci": [
+      0.1681415929,
+      0.2201327434
+    ],
+    "prob_probability_difference": -0.0610468018,
+    "prob_probability_ratio": 0.7612907568,
+    "welch_reject_bh": true,
+    "mannwhitney_reject_bh": true
+  }
+]

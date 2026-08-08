@@ -1,0 +1,11 @@
+# Populated in Phase 4 (Strategy Comparison). Left as a stub during Phase 1.
+entry:
+  frequency: "weekly"
+  dte_range: [20, 40]
+  strike_selection: "closest_atm"
+  concurrent_positions: 1
+
+costs:
+  use_ask_for_entry: true
+  commission_per_contract: 0.65
+  slippage_pct: 0.0
