@@ -4,6 +4,7 @@ __pycache__/
 .venv/
 venv/
 .env
+!.env.example
 *.egg-info/
 
 # raw/interim/processed data can be large or licensed (real option chain data) - never commit
