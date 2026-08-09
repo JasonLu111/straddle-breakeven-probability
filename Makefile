@@ -1,4 +1,4 @@
-.PHONY: install data phase1 options-data phase2 phase3 test
+.PHONY: install data phase1 options-data phase2 phase3 phase4 test
 
 install:
 	pip install -r requirements.txt
@@ -20,6 +20,10 @@ phase2: options-data
 phase3:
 	python -c "from src.models.build_model_dataset import run; [run(t) for t in ['SPY','QQQ']]"
 	python scripts/train_models.py
+
+phase4:
+	python scripts/compute_fold_thresholds.py
+	python scripts/run_backtest.py
 
 test:
 	pytest -q

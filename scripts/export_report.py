@@ -18,7 +18,7 @@ OUT_DIR = Path("reports")
 
 TITLE = "Straddle Breakeven Probability Lab"
 SUBTITLE = "跨式策略損益兩平機率研究：以波動率壓縮與機率校準模型為核心"
-REPORT_TITLE = "Phase 1-3 研究報告：市場事件、Breakeven 資料集與機率模型"
+REPORT_TITLE = "Phase 1-4 研究報告（完整版）：市場事件、Breakeven 資料集、機率模型與策略比較"
 
 
 def load_summary_table() -> pd.DataFrame:
@@ -32,6 +32,14 @@ def load_h2_summary_table() -> pd.DataFrame:
 
 def load_phase3_table() -> pd.DataFrame:
     return pd.read_csv(TABLES_DIR / "phase3_model_comparison.csv")
+
+
+def load_phase4_stats() -> pd.DataFrame:
+    return pd.read_csv("results/backtests/phase4_strategy_stats.csv")
+
+
+def load_phase4_pairwise() -> pd.DataFrame:
+    return pd.read_csv("results/backtests/phase4_pairwise_tests.csv")
 
 
 PRIMARY_ROWS_PHASE3 = [
@@ -366,6 +374,87 @@ def build_docx() -> Path:
         "交易而改善風險調整後績效，需要實際跑過回測才能確認或證偽。"
     )
 
+    doc.add_page_break()
+    h("Part D: Phase 4 — Strategy Comparison（H6）")
+
+    h("1. 方法", level=2)
+    body(
+        "比較三種進場策略：A（無條件買進）、B（僅在 compression regime 進場）、"
+        "C（機率篩選，Phase 3 Logistic Regression sigmoid 校準預測機率 > 該 fold 訓練集"
+        "自身預測機率中位數）。三者都限制在 2019-2026 共同窗口（與 Phase 3 walk-forward "
+        "測試期間相同），因為 Strategy C 只有這段期間有誠實的樣本外機率。Strategy C 的"
+        "門檻只用該 fold 的訓練集資料計算，套用到下一個測試窗口，未曾使用測試期資料。"
+    )
+
+    h("2. 主要結果（共同窗口，n=378）", level=2)
+    phase4_stats = load_phase4_stats()
+    main_strats = ["A_unconditional", "B_compression_rule", "C_probability_filtered"]
+    cols4 = ["ticker", "strategy", "n_trades", "win_rate", "avg_net_pnl", "max_drawdown",
+             "cvar_5pct", "longest_losing_streak"]
+    headers4 = ["Ticker", "Strategy", "Trades", "Win rate", "Avg PnL", "Max DD", "CVaR(5%)", "Streak"]
+    table6 = doc.add_table(rows=1, cols=len(headers4))
+    table6.style = "Light Grid Accent 1"
+    for i, htext in enumerate(headers4):
+        set_cjk(table6.rows[0].cells[i].paragraphs[0].add_run(htext), bold=True, size=9)
+    for _, rowdata in phase4_stats[phase4_stats.strategy.isin(main_strats)][cols4].iterrows():
+        cells = table6.add_row().cells
+        vals = [
+            str(rowdata["ticker"]), str(rowdata["strategy"]).replace("_", " "),
+            f"{int(rowdata['n_trades'])}", f"{rowdata['win_rate']*100:.1f}%",
+            f"${rowdata['avg_net_pnl']:.0f}", f"${rowdata['max_drawdown']:.0f}",
+            "n/a" if pd.isna(rowdata["cvar_5pct"]) else f"${rowdata['cvar_5pct']:.0f}",
+            f"{int(rowdata['longest_losing_streak'])}",
+        ]
+        for i, v in enumerate(vals):
+            set_cjk(cells[i].paragraphs[0].add_run(v), size=8.5)
+
+    doc.add_paragraph()
+    body(
+        "結論：H6 沒有被支持。Strategy C 與 Strategy A 在統計上無法區分（SPY 與 QQQ 的"
+        "成對檢定 p 值皆遠高於 0.05），與 Phase 3 的近乎隨機判別力一致。Strategy B 在 "
+        "SPY 上顯著劣於 A（Welch p=0.015），但更適合厚尾分布的 Mann-Whitney 檢定未達"
+        "顯著（p=0.086），證據強度中等。QQQ 的 Strategy C 視覺上優於 A（權益曲線見圖 "
+        "9-10），但個別交易標準差（約 $1,600）遠大於兩者平均差距，統計上不顯著。"
+    )
+
+    doc.add_page_break()
+    h("3. 權益曲線", level=2)
+    for fname, caption in [
+        ("phase4_spy_equity_curves.png", "圖 9：SPY 三種策略權益曲線（共同窗口）"),
+        ("phase4_qqq_equity_curves.png", "圖 10：QQQ 三種策略權益曲線（共同窗口）"),
+    ]:
+        doc.add_picture(str(FIGURES_DIR / fname), width=Cm(15))
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_cjk(cap.add_run(caption), size=9)
+        doc.add_paragraph()
+
+    h("4. 研究鏈總結", level=2)
+    summary_rows = [
+        ("H1：波動壓縮是否預測未來較大絕對報酬？", "Phase 1", "否——方向相反（12/12 規格顯著）"),
+        ("H2：壓縮是否提高真實 breakeven 機率？", "Phase 2", "沒有證據（6/6 規格無顯著差異）"),
+        ("H3-H5：多變量模型是否有可靠判別力？", "Phase 3", "否（pooled OOS ROC-AUC 皆接近 0.5）"),
+        ("H6：機率篩選能否改善策略績效？", "Phase 4", "否（與無條件買進統計上無法區分）"),
+    ]
+    table7 = doc.add_table(rows=1, cols=3)
+    table7.style = "Light Grid Accent 1"
+    for i, htext in enumerate(["問題", "階段", "結論"]):
+        set_cjk(table7.rows[0].cells[i].paragraphs[0].add_run(htext), bold=True)
+    for q, p, c in summary_rows:
+        row = table7.add_row().cells
+        set_cjk(row[0].paragraphs[0].add_run(q), size=10)
+        set_cjk(row[1].paragraphs[0].add_run(p), size=10)
+        set_cjk(row[2].paragraphs[0].add_run(c), size=10)
+
+    doc.add_paragraph()
+    body(
+        "這個結論本身就是這個專案的價值所在：它展示了一條完整、可重現、誠實面對虛無"
+        "結果的量化研究流程——從市場假說、真實選擇權資料建構、嚴謹的樣本外驗證，到"
+        "策略層級的統計檢定，每一步都沒有為了得到「漂亮的結果」而扭曲方法論或選擇性"
+        "報告。低波動壓縮本身不是一個可以直接拿來交易 Long Straddle 的訊號，至少在本"
+        "研究涵蓋的樣本、特徵與模型設定下是如此。"
+    )
+
     out_path = OUT_DIR / "research_report.docx"
     doc.save(str(out_path))
     return out_path
@@ -646,6 +735,91 @@ def build_pdf() -> Path:
         "strategy 預期不會顯著優於無條件買進或 compression 規則。但仍值得執行 Phase "
         "4：策略績效與機率判別力是不同的評估維度，門檻篩選仍可能透過避開少數極端虧損"
         "交易而改善風險調整後績效，需要實際跑過回測才能確認或證偽。", body_style))
+
+    story.append(PageBreak())
+    story.append(Paragraph("Part D: Phase 4 — Strategy Comparison（H6）", h1_style))
+
+    story.append(Paragraph("1. 方法", h1_style))
+    story.append(Paragraph(
+        "比較三種進場策略：A（無條件買進）、B（僅在 compression regime 進場）、C（機率"
+        "篩選，Phase 3 Logistic Regression sigmoid 校準預測機率 &gt; 該 fold 訓練集自身"
+        "預測機率中位數）。三者都限制在 2019-2026 共同窗口，因為 Strategy C 只有這段"
+        "期間有誠實的樣本外機率。Strategy C 的門檻只用該 fold 訓練集資料計算，套用到下"
+        "一個測試窗口，未曾使用測試期資料。", body_style))
+
+    story.append(Paragraph("2. 主要結果（共同窗口，n=378）", h1_style))
+    phase4_stats = load_phase4_stats()
+    main_strats = ["A_unconditional", "B_compression_rule", "C_probability_filtered"]
+    cols4 = ["ticker", "strategy", "n_trades", "win_rate", "avg_net_pnl", "max_drawdown",
+             "cvar_5pct", "longest_losing_streak"]
+    headers4 = ["Ticker", "Strategy", "Trades", "Win rate", "Avg PnL", "Max DD", "CVaR(5%)", "Streak"]
+    rows4 = [headers4]
+    for _, rowdata in phase4_stats[phase4_stats.strategy.isin(main_strats)][cols4].iterrows():
+        rows4.append([
+            str(rowdata["ticker"]), str(rowdata["strategy"]).replace("_", " "),
+            f"{int(rowdata['n_trades'])}", f"{rowdata['win_rate']*100:.1f}%",
+            f"${rowdata['avg_net_pnl']:.0f}", f"${rowdata['max_drawdown']:.0f}",
+            "n/a" if pd.isna(rowdata["cvar_5pct"]) else f"${rowdata['cvar_5pct']:.0f}",
+            f"{int(rowdata['longest_losing_streak'])}",
+        ])
+    t6 = Table(rows4, colWidths=[1.4 * cm, 3.3 * cm, 1.6 * cm, 1.8 * cm, 1.8 * cm, 2.0 * cm, 1.8 * cm, 1.6 * cm])
+    t6.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, 0), "CJK-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "CJK"),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("ALIGN", (2, 0), (-1, -1), "CENTER"),
+    ]))
+    story.append(t6)
+    story.append(Spacer(1, 0.4 * cm))
+    story.append(Paragraph(
+        "結論：H6 沒有被支持。Strategy C 與 Strategy A 在統計上無法區分（SPY 與 QQQ 的"
+        "成對檢定 p 值皆遠高於 0.05），與 Phase 3 的近乎隨機判別力一致。Strategy B 在 "
+        "SPY 上顯著劣於 A（Welch p=0.015），但更適合厚尾分布的 Mann-Whitney 檢定未達"
+        "顯著（p=0.086），證據強度中等。QQQ 的 Strategy C 視覺上優於 A，但個別交易標準"
+        "差（約 $1,600）遠大於兩者平均差距，統計上不顯著。", body_style))
+
+    story.append(PageBreak())
+    story.append(Paragraph("3. 權益曲線", h1_style))
+    for fname, caption in [
+        ("phase4_spy_equity_curves.png", "圖 9：SPY 三種策略權益曲線（共同窗口）"),
+        ("phase4_qqq_equity_curves.png", "圖 10：QQQ 三種策略權益曲線（共同窗口）"),
+    ]:
+        img3 = Image(str(FIGURES_DIR / fname), width=14 * cm, height=14 * cm * 0.62)
+        story.append(img3)
+        story.append(Paragraph(caption, caption_style))
+
+    story.append(Paragraph("4. 研究鏈總結", h1_style))
+    summary_rows = [
+        ("H1：波動壓縮是否預測未來較大絕對報酬？", "Phase 1", "否——方向相反（12/12 規格顯著）"),
+        ("H2：壓縮是否提高真實 breakeven 機率？", "Phase 2", "沒有證據（6/6 規格無顯著差異）"),
+        ("H3-H5：多變量模型是否有可靠判別力？", "Phase 3", "否（pooled OOS ROC-AUC 皆接近 0.5）"),
+        ("H6：機率篩選能否改善策略績效？", "Phase 4", "否（與無條件買進統計上無法區分）"),
+    ]
+    tbl_data4 = [["問題", "階段", "結論"]] + list(summary_rows)
+    tbl_data4 = [[Paragraph(c, body_style) for c in row] for row in tbl_data4]
+    t7 = Table(tbl_data4, colWidths=[7 * cm, 2.5 * cm, 7 * cm])
+    t7.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, 0), "CJK-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "CJK"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    story.append(t7)
+    story.append(Spacer(1, 0.4 * cm))
+    story.append(Paragraph(
+        "這個結論本身就是這個專案的價值所在：它展示了一條完整、可重現、誠實面對虛無"
+        "結果的量化研究流程——從市場假說、真實選擇權資料建構、嚴謹的樣本外驗證，到"
+        "策略層級的統計檢定，每一步都沒有為了得到「漂亮的結果」而扭曲方法論或選擇性"
+        "報告。低波動壓縮本身不是一個可以直接拿來交易 Long Straddle 的訊號，至少在本"
+        "研究涵蓋的樣本、特徵與模型設定下是如此。", body_style))
 
     out_path = OUT_DIR / "research_report.pdf"
     doc = SimpleDocTemplate(str(out_path), pagesize=A4,

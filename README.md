@@ -50,14 +50,16 @@ This repository distinguishes explicitly between two data tiers, per module (see
 - **Full-research tier**: real historical option chain data (bid/ask, IV, OI, delta).
   Only results built on this tier are described as an actual Long Straddle backtest.
 
-**Current status: Phase 1-3 complete.** Phase 2 uses real historical option chain data
-(ORATS History/EOD plan) for SPY/QQQ, 2013-2026. Phase 3's walk-forward-validated
-probability models (Logistic Regression, Random Forest) show near-chance discrimination
-(pooled OOS ROC-AUC 0.44-0.55) -- consistent with, not contradicting, Phase 2's H2 null
-result. Phase 4 (strategy comparison) is not yet started. See
-[`reports/research_report.md`](reports/research_report.md) for current findings,
-[`reports/model_card.md`](reports/model_card.md) for the Phase 3 models, and
-[`reports/limitations.md`](reports/limitations.md) for what is and isn't validated so far.
+**Current status: all four phases complete.** Phase 2 uses real historical option chain
+data (ORATS History/EOD plan) for SPY/QQQ, 2013-2026. Phase 3's walk-forward-validated
+probability models show near-chance discrimination (pooled OOS ROC-AUC 0.44-0.55).
+Phase 4's strategy comparison (unconditional vs. compression-rule vs. probability-filtered
+entry, common 2019-2026 window) finds no statistically significant improvement from either
+rule -- consistent across all four phases with a clean negative result for the original
+hypothesis. See [`reports/research_report.md`](reports/research_report.md) for the full
+writeup (including the four-phase summary table), [`reports/model_card.md`](reports/model_card.md)
+for the Phase 3 models, and [`reports/limitations.md`](reports/limitations.md) for what is
+and isn't validated.
 
 ## Project structure
 
@@ -87,7 +89,7 @@ straddle-breakeven-probability-lab/
 | 1 | Market event research (H1, price data only) | Done |
 | 2 | Breakeven dataset (real option chain, H2) | Done |
 | 3 | Probability model + walk-forward + calibration (H3-H5) | Done |
-| 4 | Strategy comparison (H6) | Not started |
+| 4 | Strategy comparison (H6) | Done |
 
 ## Setup
 
@@ -100,6 +102,9 @@ make test
 # Phase 2 (real option chain data) requires an ORATS API key:
 cp .env.example .env   # fill in ORATS_API_KEY
 make phase2    # downloads weekly chains (cached), builds breakeven dataset, runs H2 tests
+
+make phase3    # builds model input, runs walk-forward Logistic Regression / Random Forest
+make phase4    # strategy comparison: unconditional vs. compression-rule vs. probability-filtered
 ```
 
 ## License

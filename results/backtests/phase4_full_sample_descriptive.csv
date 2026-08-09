@@ -1,0 +1,5 @@
+ticker,strategy,window,n_trades,win_rate,avg_net_pnl,median_net_pnl,std_net_pnl,return_on_premium_mean,max_drawdown,cvar_5pct,longest_losing_streak,annualized_trade_count,total_premium_spent,total_net_pnl
+SPY,A_unconditional,full_2013_2026_descriptive_only,681,0.4156,-55.9116,-113.8002,938.4689,-0.0442,-48720.4896,-1803.9428,23,50.4023,790868.5,-38075.7803
+SPY,B_compression_rule,full_2013_2026_descriptive_only,74,0.4189,-195.5634,-109.0503,707.7632,-0.05,-19161.2905,,6,5.7288,75339.5,-14471.6894
+QQQ,A_unconditional,full_2013_2026_descriptive_only,681,0.4405,-58.822,-73.8003,1009.3712,-0.0378,-54440.2157,-2139.2856,17,50.4023,782049.5,-40057.8156
+QQQ,B_compression_rule,full_2013_2026_descriptive_only,72,0.4167,-148.7444,-147.7996,821.985,-0.0709,-12870.3,,8,5.5575,82039.0,-10709.5958

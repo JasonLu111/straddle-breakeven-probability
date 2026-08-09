@@ -108,3 +108,22 @@ Model outputs:
 - `results/model_metrics/phase3_pooled_metrics.csv` — one row per
   (ticker, model): classification + probability-quality metrics computed on
   the pooled out-of-sample predictions across all folds.
+
+## Phase 4: strategy comparison outputs
+
+Source: `scripts/run_backtest.py`, using `src/backtest/{entry_rules,engine,risk_metrics}.py`.
+
+- `results/backtests/phase4_strategy_stats.csv` — one row per (ticker, strategy):
+  `n_trades, win_rate, avg_net_pnl, median_net_pnl, std_net_pnl,
+  return_on_premium_mean, max_drawdown, cvar_5pct, longest_losing_streak,
+  annualized_trade_count, total_premium_spent, total_net_pnl`. Includes both the
+  net-of-cost rows and `*_gross_no_costs` rows (using `gross_pnl` instead of
+  `net_pnl`).
+- `results/backtests/phase4_pairwise_tests.csv` — Welch's t-test and Mann-Whitney U
+  on `net_pnl` between every pair of strategies, per ticker.
+- `results/backtests/phase4_full_sample_descriptive.csv` — Strategy A/B only, full
+  2013-2026 sample; explicitly not comparable to Strategy C's common-window numbers
+  (see `reports/limitations.md`).
+- `results/predictions/{TICKER}_strategy_c_thresholds.parquet` — per-fold,
+  per-test-week: `y_prob` (Logistic Regression, sigmoid-calibrated, that fold's
+  model) and `fold_train_median_prob` (that fold's causal entry threshold).

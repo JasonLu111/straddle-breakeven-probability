@@ -100,12 +100,35 @@
   findings.** Given near-chance discrimination overall, treating any single feature's
   rank as an economic result would be over-interpreting an underpowered model.
 
-## Carried forward to later phases
+## Phase 4 (strategy comparison)
 
-- Statistical significance (Phase 1) and near-chance discrimination (Phase 3) must not
-  be conflated with economic significance net of the bid-ask spread, commissions, and
-  slippage — that is only established (if at all) in Phase 4.
-- Phase 4's probability-filtered strategy should be evaluated on its own terms (PnL,
-  Sharpe, CVaR, drawdown) even though Phase 3 found weak discrimination — filtering out
-  a handful of the worst trades can still help risk-adjusted performance even when
-  overall ranking power (ROC-AUC) is weak. The two questions are related but distinct.
+- **All three strategies are restricted to the 2019-2026 common window**, not the full
+  2013-2026 history, because Strategy C only has honest out-of-sample probabilities
+  there (2013-2018 was Phase 3's initial training window, never held out). A
+  full-2013-2026 view of Strategies A/B is reported separately
+  (`results/backtests/phase4_full_sample_descriptive.csv`) but is explicitly labeled
+  "descriptive only, not comparable to Strategy C" -- comparing A/B on 13 years against
+  C on 7.5 years would make C look better or worse than it is for reasons having
+  nothing to do with the strategy itself.
+- **Strategy C's threshold (tau) is set per walk-forward fold from that fold's own
+  training-set predicted-probability median**, applied causally to the next test
+  window -- never chosen from test-period outcomes or the pooled test-period
+  prediction distribution. See `scripts/compute_fold_thresholds.py` and
+  `tests/test_entry_rules.py::test_strategy_c_threshold_is_per_fold_not_global`.
+- **CVaR(5%) is undefined (reported as NaN) for Strategy B**, whose compression-regime
+  trade counts (46-52 over the common window) put fewer than 5 observations in a 5%
+  tail -- reported as missing rather than computed from too few points to mean
+  anything.
+- **Trade-sequence drawdown, not calendar-time drawdown.** Since at most one position
+  is held at a time (`concurrent_positions: 1` in `configs/backtest.yaml`), cumulative
+  PnL in the order trades were entered is a reasonable and standard convention, but it
+  is not the same as a mark-to-market equity curve with daily granularity.
+- **Large trade-level variance relative to strategy differences.** QQQ Strategy C's
+  equity curve visually separates from Strategy A, but per-trade net PnL standard
+  deviation (~$1,600) dwarfs the ~$127 mean difference between the two strategies --
+  the visual gap is not statistically significant (Welch p=0.37, Mann-Whitney p=0.44).
+  This is flagged explicitly in the report as a caution against over-reading equity
+  curves without checking the underlying variance.
+- **No multiple-testing correction across the 3 pairwise comparisons x 2 tickers** shown
+  in the Phase 4 comparison table -- consistent with earlier phases, treat this as an
+  exploratory comparison, not 6 independent confirmed hypothesis tests.

@@ -1,7 +1,7 @@
-# Research Report — Phase 1, 2 & 3
+# Research Report — Phase 1-4 (Complete)
 
 **Straddle Breakeven Probability Lab**
-**Status: Phase 1-3 complete. Phase 4 (strategy comparison) not yet started.**
+**Status: All four phases complete.**
 
 ## Part A: Phase 1 — Market Event Research
 
@@ -300,3 +300,103 @@ Phase 4（Strategy Comparison）建議方向：
    看到某個數字轉正，就代表模型本身有效——本研究鏈的誠實性在於清楚區分「統計顯著」
    「機率校準良好」與「策略可獲利」這三件事，Phase 1–3 已經分別誠實回答了前兩項為
    「不成立」與「接近隨機」，Phase 4 需要在此基礎上謹慎評估第三項。
+
+## Part D: Phase 4 — Strategy Comparison（H6）
+
+### 1. 方法
+
+比較三種進場策略：
+
+| 策略 | 規則 |
+|---|---|
+| A：Unconditional | 每週固定買進 ATM Long Straddle（無條件） |
+| B：Compression rule | 只在 `compression_regime_20` 為真時進場 |
+| C：Probability-filtered | 只在 Phase 3 Logistic Regression（sigmoid 校準）預測機率 > 該 fold 訓練集自身預測機率中位數時進場 |
+
+**公平比較窗口**：三種策略都限制在 **2019-01 至 2026-07**（與 Phase 3 walk-forward
+測試期間相同），因為 Strategy C 只有在這段期間才有誠實的樣本外機率預測（2013–2018
+是 Phase 3 的初始訓練窗口，從未被當作測試集，因此沒有對應的 OOS 機率）。如果讓
+A/B 使用完整 2013–2026 歷史、C 只用 2019–2026，會是不公平的比較；限制在共同窗口
+才能讓三者放在同一個基礎上比較。Strategy C 的門檻（tau）**只用該 fold 的訓練集資料
+計算**（訓練集預測機率的中位數），套用到下一個測試窗口，未曾使用測試期資料或
+全樣本機率分布來反推門檻——完整程式碼見 `scripts/compute_fold_thresholds.py`。
+
+### 2. 主要結果（共同窗口，n=378）
+
+**SPY**
+
+| Strategy | Trades | Win rate | Avg net PnL | Std | Max drawdown | CVaR(5%) | Longest losing streak | Total premium |
+|---|---|---|---|---|---|---|---|---|
+| A_unconditional | 378 | 44.7% | -$63.84 | $1,203 | -$48,720 | -$2,031 | 23 | $615,786 |
+| B_compression_rule | 46 | 37.0% | -$380.65 | $757 | -$19,161 | n/a（樣本太小） | 6 | $61,985 |
+| C_probability_filtered | 234 | 45.7% | -$67.79 | $1,115 | -$27,104 | -$2,086 | 14 | $399,753 |
+
+**QQQ**
+
+| Strategy | Trades | Win rate | Avg net PnL | Std | Max drawdown | CVaR(5%) | Longest losing streak | Total premium |
+|---|---|---|---|---|---|---|---|---|
+| A_unconditional | 378 | 46.3% | -$79.94 | $1,333 | -$54,440 | -$2,433 | 17 | $662,533 |
+| B_compression_rule | 52 | 44.2% | -$181.60 | $960 | -$12,870 | n/a（樣本太小） | 5 | $76,068 |
+| C_probability_filtered | 172 | 48.8% | +$47.39 | $1,629 | -$18,316 | -$2,839 | 9 | $312,215 |
+
+### 3. 統計檢定（成對比較，net PnL）
+
+| Ticker | A vs B | A vs C | B vs C |
+|---|---|---|---|
+| SPY | mean diff +$316.81, Welch p=0.015, MW p=0.086 | mean diff +$3.96, Welch p=0.967, MW p=0.782 | mean diff -$312.86, Welch p=0.021, MW p=0.078 |
+| QQQ | mean diff +$101.66, Welch p=0.499, MW p=0.842 | mean diff -$127.33, Welch p=0.370, MW p=0.439 | mean diff -$228.98, Welch p=0.211, MW p=0.525 |
+
+**結論：H6 沒有被支持。**
+
+1. **Strategy C（機率篩選）與 Strategy A（無條件）在統計上無法區分**（SPY：
+   p=0.97/0.78；QQQ：p=0.37/0.44）。這與 Phase 3 的發現完全吻合——模型本身沒有
+   可靠的判別力，篩選自然也不會改善績效。QQQ 上 Strategy C 的平均淨損益是正的
+   （+$47.39），乍看比 A（-$79.94）好很多，但個別交易的標準差高達 $1,629，遠大於
+   兩者平均值的差距，因此這個看起來明顯的差異在統計上完全不顯著——這正是本研究
+   反覆強調「不要把視覺上的差異當作證據」的具體案例。
+2. **Strategy B（compression 規則）在 SPY 上顯著劣於 Strategy A**（Welch
+   p=0.015），但用更適合厚尾分布的 Mann-Whitney U 檢定則未達顯著（p=0.086）。
+   由於選擇權報酬存在厚尾與極端值，本研究的統計檢定設計原則是更重視非參數檢定
+   （見 Part A 第六節），因此把這個結果視為「方向上偏負、證據強度中等」，而非
+   「已充分證實」。QQQ 上同方向但更不顯著（p=0.50/0.84）。
+3. 三種策略在兩個標的上的平均淨損益都是負的（除了 QQQ 的 Strategy C），與選擇權
+   市場常見的「波動率風險溢酬」（volatility risk premium）現象一致：長期無條件買進
+   波動率（Long Straddle）平均而言需要支付溢酬，只有在少數真正的尾部事件中才會
+   大幅獲利。
+
+### 4. 權益曲線
+
+- [`reports/figures/phase4_spy_equity_curves.png`](figures/phase4_spy_equity_curves.png)
+- [`reports/figures/phase4_qqq_equity_curves.png`](figures/phase4_qqq_equity_curves.png)
+
+SPY 的權益曲線清楚顯示：三種策略在 2020 年初（COVID-19 崩盤）都出現大幅正報酬的
+尖峰，之後逐步回吐，最終在樣本尾端都落入虧損——這是典型的「長波動率」策略特徵：
+長期小幅付出時間價值成本，換取罕見尾部事件中的大幅獲利，若尾部事件發生頻率不夠
+高，長期平均會是負值。QQQ 的 Strategy C 權益曲線視覺上明顯優於 A，但如上一節所述，
+此差異未達統計顯著，不應解讀為策略優勢。
+
+### 5. 穩健性：不含交易成本 / 全樣本描述性檢視
+
+- 不含交易成本（`*_gross_no_costs`）版本與上表方向一致，差異主要來自 commission
+  規模相對於選擇權權利金金額很小（詳見 `results/backtests/phase4_strategy_stats.csv`）。
+- 若不限制在共同窗口，改用 Strategy A/B 的完整 2013–2026 樣本（`results/backtests/
+  phase4_full_sample_descriptive.csv`，**僅供參考，不能拿來跟 Strategy C 比較**），
+  數字與 Phase 2 的 H2 檢定結果一致（SPY compression 規則全樣本平均淨損益
+  -$195.56，與 Phase 2 報告數字相同），互相印證了兩個 pipeline 的正確性。
+
+### 6. 研究鏈總結
+
+四個階段連貫起來，答案是誠實且一致的「否定」：
+
+| 問題 | 階段 | 結論 |
+|---|---|---|
+| H1：波動壓縮是否預測未來較大絕對報酬？ | Phase 1 | **否**——方向相反，壓縮後報酬反而更小（12/12 規格顯著） |
+| H2：壓縮是否提高真實 breakeven 機率？ | Phase 2 | **沒有證據**——條件機率與無條件機率統計上無法區分（6/6 規格） |
+| H3-H5：多變量機率模型是否有可靠判別力／校準品質？ | Phase 3 | **否**——四個模型 pooled OOS ROC-AUC 皆接近 0.5（隨機） |
+| H6：機率篩選能否改善策略績效？ | Phase 4 | **否**——Strategy C 與無條件買進在統計上無法區分 |
+
+這個結論本身就是這個專案的價值所在：它展示了一條完整、可重現、誠實面對虛無結果的
+量化研究流程——從市場假說、真實選擇權資料建構、嚴謹的樣本外驗證，到策略層級的
+統計檢定，每一步都沒有為了得到「漂亮的結果」而扭曲方法論或選擇性報告。低波動壓縮
+本身不是一個可以直接拿來交易 Long Straddle 的訊號，至少在本研究涵蓋的樣本、特徵與
+模型設定下是如此。
