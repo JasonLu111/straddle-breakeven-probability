@@ -78,3 +78,33 @@ ATM strike, nearest-to-30-DTE expiration within 20-40 DTE).
 Weeks with no expiration in the [20,40] DTE window, or where the resolved
 `pricing_date` couldn't be matched within 3 days (e.g. trade not yet expired),
 are excluded rather than imputed -- see `reports/limitations.md` for counts.
+
+## Phase 3: model input & outputs
+
+Source: `data/processed/{TICKER}_phase3_model_input.parquet`, built by
+`src/models/build_model_dataset.py` (Phase 1 features + Phase 2 option-cost
+features, joined on `trade_date`).
+
+New columns beyond what's listed above (see `src/features/option_features.py`):
+
+| Column | Description |
+|---|---|
+| `straddle_premium_pct` | `premium_mid / stock_price` |
+| `atm_implied_volatility` | `(call_mid_iv + put_mid_iv) / 2` |
+| `put_call_iv_difference` | `put_mid_iv - call_mid_iv` |
+| `days_to_expiry` | Alias of `dte` |
+| `bid_ask_spread_pct` | `(premium_ask - premium_mid) / premium_mid` |
+| `iv_minus_rv` | `atm_implied_volatility - rv_20` (as of `trade_date`) |
+
+Model outputs:
+
+- `results/predictions/{TICKER}_oos_predictions.parquet` — long format,
+  one row per (fold, model, test observation): `ticker, fold_id, model,
+  trade_date, y_true, y_prob`. Every row's `y_prob` was produced by a model
+  fit only on data strictly before `trade_date`'s test fold.
+- `results/model_metrics/{TICKER}_fold_diagnostics.json` — fold boundaries
+  (train/test date ranges, sample sizes) and per-fold-averaged Logistic
+  Regression coefficients / Random Forest feature importances.
+- `results/model_metrics/phase3_pooled_metrics.csv` — one row per
+  (ticker, model): classification + probability-quality metrics computed on
+  the pooled out-of-sample predictions across all folds.

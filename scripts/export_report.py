@@ -18,7 +18,7 @@ OUT_DIR = Path("reports")
 
 TITLE = "Straddle Breakeven Probability Lab"
 SUBTITLE = "跨式策略損益兩平機率研究：以波動率壓縮與機率校準模型為核心"
-REPORT_TITLE = "Phase 1 & 2 研究報告：市場事件研究與 Breakeven 資料集"
+REPORT_TITLE = "Phase 1-3 研究報告：市場事件、Breakeven 資料集與機率模型"
 
 
 def load_summary_table() -> pd.DataFrame:
@@ -28,6 +28,18 @@ def load_summary_table() -> pd.DataFrame:
 
 def load_h2_summary_table() -> pd.DataFrame:
     return pd.read_csv(TABLES_DIR / "h2_summary_table.csv")
+
+
+def load_phase3_table() -> pd.DataFrame:
+    return pd.read_csv(TABLES_DIR / "phase3_model_comparison.csv")
+
+
+PRIMARY_ROWS_PHASE3 = [
+    ("dummy_prior（無條件歷史發生率）", "ROC-AUC 0.437, Brier 0.2508"),
+    ("compression_rule（單一 compression 規則）", "ROC-AUC 0.437, Brier 0.2527"),
+    ("logistic_regression（22 特徵）", "ROC-AUC 0.502, Brier 0.2521"),
+    ("random_forest（22 特徵，300 棵樹）", "ROC-AUC 0.516, Brier 0.2533"),
+]
 
 
 PRIMARY_ROWS_H2 = [
@@ -296,6 +308,64 @@ def build_docx() -> Path:
         "觀察，可作為 Phase 3 模型是否真的捕捉到交互作用的檢查點。"
     )
 
+    doc.add_page_break()
+    h("Part C: Phase 3 — Probability Model（H3-H5）")
+
+    h("1. 資料與方法", level=2)
+    for label, val in [
+        ("特徵", "22 個變數：波動率、壓縮、動能、選擇權成本四大類（見 configs/model.yaml）"),
+        ("標籤", "target_expiry（Phase 2 的真實 breakeven 事件）"),
+        ("驗證方式", "Walk-forward expanding window：初始訓練 6 年，之後每次測試 1 年，共 8 個 fold（2019-2026 上半年）"),
+        ("模型", "dummy_prior、compression_rule、logistic_regression（22 特徵）、random_forest（300 棵淺樹）"),
+        ("校準", "Sigmoid (Platt) 為主，isotonic 為對照（樣本量小，isotonic 較不穩定）"),
+        ("超參數", "事先固定於 configs/model.yaml，不在 fold 內調參，避免疊加資料窺探風險"),
+    ]:
+        body(f"• {label}：{val}")
+    body(
+        "所有 scaling、calibration（內部 5-fold CV）與模型訓練，都嚴格限制在該 fold 的"
+        "訓練窗口內完成，測試窗口的任何一筆資料都不會被用於挑選特徵、校準或調參。"
+    )
+
+    h("2. 主要結果（SPY, pooled OOS, n=378）", level=2)
+    table5 = doc.add_table(rows=1, cols=2)
+    table5.style = "Light Grid Accent 1"
+    hdr5 = table5.rows[0].cells
+    set_cjk(hdr5[0].paragraphs[0].add_run("模型"), bold=True)
+    set_cjk(hdr5[1].paragraphs[0].add_run("結果"), bold=True)
+    for label, val in PRIMARY_ROWS_PHASE3:
+        row = table5.add_row().cells
+        set_cjk(row[0].paragraphs[0].add_run(label))
+        set_cjk(row[1].paragraphs[0].add_run(val))
+
+    doc.add_paragraph()
+    body(
+        "結論：四個模型的樣本外判別力都接近隨機猜測（ROC-AUC 0.50 為隨機基準），沒有"
+        "一個模型展現出可靠的預測力。Random Forest 名目最高但差距極小，且 Brier score "
+        "幾乎與最無資訊量的 dummy_prior 基準相同。這與 Phase 2 的 H2 結果完全一致："
+        "增加模型複雜度並不能無中生有創造出資料本身不存在的訊號。"
+    )
+
+    doc.add_page_break()
+    h("3. 圖表", level=2)
+    for fname, caption in [
+        ("phase3_calibration_curve.png", "圖 6：四個模型（SPY, sigmoid 校準）的 calibration curve"),
+        ("phase3_roc_curve.png", "圖 7：四個模型的 ROC curve（pooled OOS）"),
+        ("phase3_feature_importance.png", "圖 8：Logistic Regression 係數與 Random Forest feature importance"),
+    ]:
+        doc.add_picture(str(FIGURES_DIR / fname), width=Cm(15))
+        cap = doc.add_paragraph()
+        cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_cjk(cap.add_run(caption), size=9)
+        doc.add_paragraph()
+
+    h("4. 下一步", level=2)
+    body(
+        "既然 Phase 3 沒有找到可靠的機率判別力，Phase 4 的 probability-filtered "
+        "strategy 預期不會顯著優於無條件買進或 compression 規則。但仍值得執行 Phase "
+        "4：策略績效與機率判別力是不同的評估維度，門檻篩選仍可能透過避開少數極端虧損"
+        "交易而改善風險調整後績效，需要實際跑過回測才能確認或證偽。"
+    )
+
     out_path = OUT_DIR / "research_report.docx"
     doc.save(str(out_path))
     return out_path
@@ -519,6 +589,63 @@ def build_pdf() -> Path:
         "straddle_premium_pct 等），不能只用價格壓縮特徵，因為 H2 已證明單一 compression "
         "規則對真實 breakeven 機率沒有單變量預測力。Compression 下 PnL 偏負但未顯著的"
         "觀察，可作為 Phase 3 模型是否真的捕捉到交互作用的檢查點。", body_style))
+
+    story.append(PageBreak())
+    story.append(Paragraph("Part C: Phase 3 — Probability Model（H3-H5）", h1_style))
+
+    story.append(Paragraph("1. 資料與方法", h1_style))
+    for label, val in [
+        ("特徵", "22 個變數：波動率、壓縮、動能、選擇權成本四大類（見 configs/model.yaml）"),
+        ("標籤", "target_expiry（Phase 2 的真實 breakeven 事件）"),
+        ("驗證方式", "Walk-forward expanding window：初始訓練 6 年，之後每次測試 1 年，共 8 個 fold（2019-2026 上半年）"),
+        ("模型", "dummy_prior、compression_rule、logistic_regression（22 特徵）、random_forest（300 棵淺樹）"),
+        ("校準", "Sigmoid (Platt) 為主，isotonic 為對照（樣本量小，isotonic 較不穩定）"),
+        ("超參數", "事先固定於 configs/model.yaml，不在 fold 內調參，避免疊加資料窺探風險"),
+    ]:
+        story.append(Paragraph(f"• {label}：{val}", body_style))
+    story.append(Paragraph(
+        "所有 scaling、calibration（內部 5-fold CV）與模型訓練，都嚴格限制在該 fold 的"
+        "訓練窗口內完成，測試窗口的任何一筆資料都不會被用於挑選特徵、校準或調參。", body_style))
+
+    story.append(Paragraph("2. 主要結果（SPY, pooled OOS, n=378）", h1_style))
+    tbl_data3 = [["模型", "結果"]] + [[k, v] for k, v in PRIMARY_ROWS_PHASE3]
+    tbl_data3 = [[Paragraph(c, body_style) for c in row] for row in tbl_data3]
+    t5 = Table(tbl_data3, colWidths=[8 * cm, 8.5 * cm])
+    t5.setStyle(TableStyle([
+        ("FONTNAME", (0, 0), (-1, 0), "CJK-Bold"),
+        ("FONTNAME", (0, 1), (-1, -1), "CJK"),
+        ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#2c3e50")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cccccc")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f5f5f5")]),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ]))
+    story.append(t5)
+    story.append(Spacer(1, 0.4 * cm))
+    story.append(Paragraph(
+        "結論：四個模型的樣本外判別力都接近隨機猜測（ROC-AUC 0.50 為隨機基準），沒有"
+        "一個模型展現出可靠的預測力。Random Forest 名目最高但差距極小，且 Brier score "
+        "幾乎與最無資訊量的 dummy_prior 基準相同。這與 Phase 2 的 H2 結果完全一致："
+        "增加模型複雜度並不能無中生有創造出資料本身不存在的訊號。", body_style))
+
+    story.append(PageBreak())
+    story.append(Paragraph("3. 圖表", h1_style))
+    for fname, caption in [
+        ("phase3_calibration_curve.png", "圖 6：四個模型（SPY, sigmoid 校準）的 calibration curve"),
+        ("phase3_roc_curve.png", "圖 7：四個模型的 ROC curve（pooled OOS）"),
+        ("phase3_feature_importance.png", "圖 8：Logistic Regression 係數與 Random Forest feature importance"),
+    ]:
+        img2 = Image(str(FIGURES_DIR / fname), width=14 * cm, height=14 * cm * 0.6)
+        story.append(img2)
+        story.append(Paragraph(caption, caption_style))
+
+    story.append(Paragraph("4. 下一步", h1_style))
+    story.append(Paragraph(
+        "既然 Phase 3 沒有找到可靠的機率判別力，Phase 4 的 probability-filtered "
+        "strategy 預期不會顯著優於無條件買進或 compression 規則。但仍值得執行 Phase "
+        "4：策略績效與機率判別力是不同的評估維度，門檻篩選仍可能透過避開少數極端虧損"
+        "交易而改善風險調整後績效，需要實際跑過回測才能確認或證偽。", body_style))
 
     out_path = OUT_DIR / "research_report.pdf"
     doc = SimpleDocTemplate(str(out_path), pagesize=A4,

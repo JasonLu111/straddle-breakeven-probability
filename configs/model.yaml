@@ -1,13 +1,65 @@
-# Populated in Phase 3 (Probability Model). Left as a stub during Phase 1.
 walk_forward:
   initial_train_years: 6
   test_window_years: 1
   expanding: true
 
+target: target_expiry
+
+features:
+  - rv_10
+  - rv_20
+  - rv_60
+  - rv_20_percentile
+  - rv_term_ratio_10_60
+  - vol_of_vol
+  - bb_width
+  - bb_width_percentile
+  - atr_percentile
+  - range_10
+  - range_20
+  - momentum_5
+  - momentum_20
+  - distance_from_ma20
+  - volume_change
+  - downside_semivolatility
+  - upside_downside_vol_ratio
+  - straddle_premium_pct
+  - atm_implied_volatility
+  - iv_minus_rv
+  - put_call_iv_difference
+  - bid_ask_spread_pct
+  - compression_regime_20  # cast to int; the interpretable single-rule baseline as a feature too
+
 models:
-  - dummy
+  - dummy_prior
+  - compression_rule
   - logistic_regression
   - random_forest
 
+logistic_regression:
+  C: 1.0
+  penalty: "l2"
+  max_iter: 1000
+
+random_forest:
+  # Kept shallow/heavily-regularized on purpose: ~300-650 training rows per
+  # fold cannot support a deep forest without overfitting. Not tuned per-fold
+  # (that would be a second layer of data snooping on top of the walk-forward
+  # split) -- pre-registered once, here.
+  n_estimators: 300
+  max_depth: 4
+  min_samples_leaf: 15
+  max_features: "sqrt"
+  random_state: 42
+
 calibration:
-  method: "isotonic"  # or "sigmoid"
+  # Sigmoid (Platt) rather than isotonic: isotonic calibration is
+  # nonparametric and needs a few hundred+ calibration samples to be stable,
+  # and per-fold training windows here are only 300-650 weekly observations.
+  # Both are computed and reported so the difference is visible rather than
+  # assumed. sklearn's CalibratedClassifierCV(cv=folds) is used, which
+  # internally cross-validates *within* the training fold only -- it never
+  # touches a single test-period observation.
+  method: "sigmoid"
+  secondary_method: "isotonic"
+  cv_folds: 5

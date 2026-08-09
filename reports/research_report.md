@@ -1,7 +1,7 @@
-# Research Report — Phase 1 & 2
+# Research Report — Phase 1, 2 & 3
 
 **Straddle Breakeven Probability Lab**
-**Status: Phase 1 & 2 complete (Full-research tier for H1/H2, real ORATS option chain data). Phases 3–4 not yet started.**
+**Status: Phase 1-3 complete. Phase 4 (strategy comparison) not yet started.**
 
 ## Part A: Phase 1 — Market Event Research
 
@@ -218,3 +218,85 @@ Phase 3（Probability Model）建議方向，基於 Phase 1+2 的發現：
    的交互作用；如果不能，則應誠實回報「此策略在本樣本中沒有可靠的統計邊際」。
 3. 樣本數限制（每週一筆觀察，13 年約 680 筆）意味著 walk-forward validation 的每個
    fold 都會更小；Phase 3 需要謹慎設計 fold 數量與 calibration 方法，避免過度配適。
+
+## Part C: Phase 3 — Probability Model（H3–H5）
+
+### 1. 資料與方法
+
+| 項目 | 內容 |
+|---|---|
+| 資料 | Phase 1 價格/波動率特徵 + Phase 2 選擇權成本特徵，共 22 個預測變數 |
+| 標籤 | `target_expiry`（Phase 2 的真實 breakeven 事件） |
+| 驗證方式 | Walk-forward expanding window：初始訓練 6 年（2013–2018），每次往後測試 1 年，共 8 個 fold（2019–2026 上半年），訓練集從 303 筆擴大到 656 筆，每個 fold 測試集約 50 筆 |
+| 模型 | `dummy_prior`（無條件歷史發生率）、`compression_rule`（單一 compression 規則）、`logistic_regression`（22 特徵、標準化、L2 正則）、`random_forest`（300 棵淺樹，`max_depth=4`） |
+| 校準 | Sigmoid (Platt)為主，isotonic 為對照——因為每個 fold 訓練集僅 300–650 筆，isotonic 在此樣本量下容易不穩定（詳見 `reports/limitations.md`） |
+| 超參數 | 全部**事先固定**於 `configs/model.yaml`，不在每個 fold 內調參——避免在 walk-forward 之上再疊加一層資料窺探 |
+
+所有 scaling、calibration（`CalibratedClassifierCV` 內部 5-fold CV）與模型訓練，
+都嚴格限制在該 fold 的訓練窗口內完成，測試窗口的任何一筆資料都不會被用於挑選特徵、
+校準或調參（見 `tests/test_walk_forward.py` 六項無洩漏檢定）。所有 fold 的樣本外
+（out-of-sample）預測會被彙總（pooled）後再計算最終指標。
+
+### 2. 主要結果（SPY，pooled OOS，n=378）
+
+| Model | ROC-AUC | PR-AUC | Brier score | Log loss | Calibration slope | ECE |
+|---|---|---|---|---|---|---|
+| dummy_prior（無條件歷史發生率） | 0.437 | 0.411 | 0.2508 | 0.6951 | -1.082 | 0.047 |
+| compression_rule（單一 compression 規則） | 0.437 | 0.410 | 0.2527 | 0.6989 | -0.872 | 0.048 |
+| logistic_regression | 0.502 | 0.450 | 0.2521 | 0.6981 | -0.170 | 0.041 |
+| random_forest | 0.516 | 0.456 | 0.2533 | 0.7012 | 0.035 | 0.042 |
+
+**結論：四個模型的樣本外判別力都接近隨機猜測（ROC-AUC 0.50 為隨機基準），沒有一個
+模型展現出可靠的預測力。** Random Forest 的 ROC-AUC（0.516）與 PR-AUC 名目上最高，
+但差距非常小，且 Brier score 幾乎與最無資訊量的 `dummy_prior` 基準（0.2508）相同
+（理論下限 `base_rate×(1-base_rate) ≈ 0.247`）——換句話說，即使是最複雜的模型，
+機率預測品質也沒有實質優於「什麼都不做，只回報歷史平均發生率」。
+
+Calibration curve（下圖）也顯示沒有一個模型的預測機率能可靠地追蹤對角線（完美校準
+線），進一步印證判別力不足的結論。
+
+**這與 Phase 2 的 H2 結果完全一致，而非矛盾**：H2 已經證明單一 compression 規則
+對真實 breakeven 機率沒有單變量預測力；Phase 3 進一步顯示，即使加入 22 個特徵、
+非線性模型（Random Forest）與正式的機率校準，依然無法從這份資料中榨出可靠的訊號。
+增加模型複雜度並不能無中生有創造出資料本身不存在的訊號——這正是本研究刻意用
+walk-forward 樣本外驗證而非 in-sample 配適的原因。
+
+### 3. 穩健性（Isotonic 校準對照、QQQ）
+
+Isotonic 校準版本與 sigmoid 版本方向大致一致（Random Forest isotonic 在 SPY 上
+ROC-AUC 略高至 0.549，QQQ 上普遍略低），但差異落在小樣本雜訊範圍內，不影響上述結論。
+QQQ 的四個模型 ROC-AUC 同樣落在 0.43–0.53 區間。完整 12 列結果（2 標的 × 6 模型
+變體）見 [`reports/tables/phase3_model_comparison.md`](tables/phase3_model_comparison.md)。
+
+### 4. 可解釋性（僅供參考，不應解讀為交易訊號）
+
+Logistic Regression 係數與 Random Forest feature importance（跨 fold 平均後）都將
+`put_call_iv_difference`（put/call 隱含波動率差）、`atr_percentile`、以及數個
+realized volatility 特徵排在前列。**但由於整體判別力接近隨機，這些排序只反映模型
+在各 fold 訓練資料上抓住了什麼，不代表已驗證的經濟關係**——在判別力不足的模型上
+過度解讀 feature importance，是機器學習中一個常見的陷阱，這裡刻意點出而非重複犯。
+
+### 5. 圖表
+
+- [`reports/figures/phase3_calibration_curve.png`](figures/phase3_calibration_curve.png) —
+  四個模型（SPY，sigmoid 校準）的 calibration curve。
+- [`reports/figures/phase3_roc_curve.png`](figures/phase3_roc_curve.png) —
+  四個模型的 ROC curve（pooled OOS）。
+- [`reports/figures/phase3_feature_importance.png`](figures/phase3_feature_importance.png) —
+  Logistic Regression 係數與 Random Forest feature importance。
+
+### 6. 下一步
+
+Phase 4（Strategy Comparison）建議方向：
+
+1. 既然 Phase 3 沒有找到可靠的機率判別力，Phase 4 的「probability-filtered
+   strategy」預期不會顯著優於無條件買進或 compression 規則——這應該被誠實地列為
+   預期結果，而非事後才發現。
+2. 仍然值得執行 Phase 4，原因是：策略績效（PnL、Sharpe、CVaR、最大回撤）與機率判別
+   力（ROC-AUC）是不同的評估維度；即使模型排序能力弱，門檻篩選仍可能透過避開少數
+   極端虧損交易而改善風險調整後績效，這需要實際跑過 walk-forward 回測才能確認或
+   證偽。
+3. 應同時報告「模型判別力弱」與「策略績效」兩件事，避免讀者誤以為只要跑了策略回測、
+   看到某個數字轉正，就代表模型本身有效——本研究鏈的誠實性在於清楚區分「統計顯著」
+   「機率校準良好」與「策略可獲利」這三件事，Phase 1–3 已經分別誠實回答了前兩項為
+   「不成立」與「接近隨機」，Phase 4 需要在此基礎上謹慎評估第三項。

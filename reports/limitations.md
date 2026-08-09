@@ -75,12 +75,37 @@
   second layer of data snooping on top of the regime-threshold sensitivity
   already controlled for in Phase 1.
 
+## Phase 3 (probability models)
+
+- **Small pooled evaluation set.** 378 out-of-sample predictions per ticker (8 folds x
+  ~47 test rows/fold on average) is not enough to distinguish a ROC-AUC of 0.55 from
+  0.50 with any confidence -- no formal test for "is this AUC significantly above chance"
+  is run in this phase. Read the Phase 3 results as "no evidence of a reliable signal
+  found," not as a precise estimate of how close to zero the true signal is.
+- **Sigmoid over isotonic calibration**, chosen because isotonic regression is
+  nonparametric and needs several hundred+ calibration samples to be stable, and each
+  fold's training window is only 300-656 observations before the internal calibration
+  CV split shrinks it further. Isotonic results are still reported as a secondary
+  comparison (`*_isotonic` model rows) rather than omitted.
+- **No per-fold hyperparameter tuning.** Logistic Regression's `C` and Random Forest's
+  tree depth/leaf size are fixed once in `configs/model.yaml`, not selected via
+  cross-validation inside each fold. Given the already-small per-fold sample, an inner
+  tuning loop would add a second layer of data-snooping risk on top of the walk-forward
+  split itself, likely inflating apparent performance without a real improvement in the
+  underlying signal.
+- **Calibration slope/intercept are unreliable for `dummy_prior` and
+  `compression_rule`**, since those baselines only emit 1-2 distinct probability values
+  per fold -- see `reports/model_card.md`.
+- **Feature importances/coefficients are reported for transparency, not as validated
+  findings.** Given near-chance discrimination overall, treating any single feature's
+  rank as an economic result would be over-interpreting an underpowered model.
+
 ## Carried forward to later phases
 
-- Phase 2 will need to document the real option data source, its coverage period, and
-  any survivorship/liquidity filtering applied to the option chain.
-- Phase 3's walk-forward validation must refit scaling/imputation/calibration within
-  each training window only (see `configs/model.yaml`), not on the full sample.
-- Statistical significance (Phase 1) must not be conflated with economic significance
-  net of the bid-ask spread, commissions, and slippage — that is only established (if at
-  all) in Phase 4.
+- Statistical significance (Phase 1) and near-chance discrimination (Phase 3) must not
+  be conflated with economic significance net of the bid-ask spread, commissions, and
+  slippage — that is only established (if at all) in Phase 4.
+- Phase 4's probability-filtered strategy should be evaluated on its own terms (PnL,
+  Sharpe, CVaR, drawdown) even though Phase 3 found weak discrimination — filtering out
+  a handful of the worst trades can still help risk-adjusted performance even when
+  overall ranking power (ROC-AUC) is weak. The two questions are related but distinct.
