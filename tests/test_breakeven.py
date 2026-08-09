@@ -2,6 +2,7 @@ import pandas as pd
 import pytest
 
 from src.targets.breakeven import select_straddle_entry
+from src.targets.build_breakeven_dataset import _last_trading_day_on_or_before
 
 
 def make_chain_row(strike, dte, stock_price=100.0, expir_date="2020-02-01"):
@@ -52,3 +53,23 @@ def test_does_not_mix_strikes_across_different_expirations():
     entry = select_straddle_entry(chain, min_dte=20, max_dte=40, preferred_dte=30)
     assert entry.dte == 30
     assert entry.strike == 105
+
+
+def test_last_trading_day_resolves_occ_saturday_convention():
+    # OCC lists standard monthly expirations as the Saturday after the third
+    # Friday; the actual last trading day is that Friday.
+    trading_days = pd.DatetimeIndex(["2013-02-13", "2013-02-14", "2013-02-15"])  # Wed/Thu/Fri
+    result = _last_trading_day_on_or_before(trading_days, pd.Timestamp("2013-02-16"), max_lag_days=3)  # Saturday
+    assert result == pd.Timestamp("2013-02-15")
+
+
+def test_last_trading_day_returns_none_beyond_lag_tolerance():
+    trading_days = pd.DatetimeIndex(["2013-01-01"])
+    result = _last_trading_day_on_or_before(trading_days, pd.Timestamp("2013-01-10"), max_lag_days=3)
+    assert result is None
+
+
+def test_last_trading_day_returns_none_when_target_before_all_data():
+    trading_days = pd.DatetimeIndex(["2013-05-01", "2013-05-02"])
+    result = _last_trading_day_on_or_before(trading_days, pd.Timestamp("2013-01-01"), max_lag_days=3)
+    assert result is None

@@ -50,8 +50,10 @@ This repository distinguishes explicitly between two data tiers, per module (see
 - **Full-research tier**: real historical option chain data (bid/ask, IV, OI, delta).
   Only results built on this tier are described as an actual Long Straddle backtest.
 
-**Current status: Phase 1 (Market Event Research) — MVP tier, underlying price data
-only.** No claims about real straddle P&L are made yet. See
+**Current status: Phase 2 complete — Full-research tier for the breakeven-event
+analysis (H1, H2).** Phase 2 uses real historical option chain data (ORATS History/EOD
+plan: bid/ask, IV, delta, OI) for SPY/QQQ, 2013-2026. Phases 3-4 (probability model,
+strategy backtest) are not yet started. See
 [`reports/research_report.md`](reports/research_report.md) for current findings and
 [`reports/limitations.md`](reports/limitations.md) for what is and isn't validated so far.
 
@@ -80,8 +82,8 @@ straddle-breakeven-probability-lab/
 
 | Phase | Scope | Status |
 |-------|-------|--------|
-| 1 | Market event research (H1, price data only) | In progress |
-| 2 | Breakeven dataset (real option chain, H2) | Not started |
+| 1 | Market event research (H1, price data only) | Done |
+| 2 | Breakeven dataset (real option chain, H2) | Done |
 | 3 | Probability model + walk-forward + calibration (H3-H5) | Not started |
 | 4 | Strategy comparison (H6) | Not started |
 
@@ -92,6 +94,10 @@ pip install -r requirements.txt
 make data      # download underlying price data
 make phase1    # build Phase 1 dataset + run statistical tests
 make test
+
+# Phase 2 (real option chain data) requires an ORATS API key:
+cp .env.example .env   # fill in ORATS_API_KEY
+make phase2    # downloads weekly chains (cached), builds breakeven dataset, runs H2 tests
 ```
 
 ## License

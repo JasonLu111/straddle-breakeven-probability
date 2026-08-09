@@ -1,0 +1,7 @@
+ticker,compression_threshold_pct,is_primary_spec,n_trades_total,prob_n_total,prob_n_condition_true,prob_p_conditional,prob_p_unconditional,prob_probability_difference,prob_probability_ratio,pnl_mean_treatment,pnl_mean_control,pnl_mean_difference,pnl_welch_p_value,pnl_welch_reject_bh
+SPY,10,False,681,681,26,0.4615,0.4156,0.046,1.1106,-223.2808,-49.2679,-174.0129,0.20134163733911797,False
+SPY,20,True,681,681,74,0.4189,0.4156,0.0034,1.0081,-195.5634,-38.8865,-156.6769,0.08819720625380485,False
+SPY,30,False,681,681,145,0.4345,0.4156,0.0189,1.0455,-81.9758,-48.8606,-33.1152,0.6332497945782892,False
+QQQ,10,False,681,681,33,0.4242,0.4405,-0.0163,0.963,-91.5879,-57.1534,-34.4345,0.8338651015136432,False
+QQQ,20,False,681,681,72,0.4167,0.4405,-0.0239,0.9458,-148.7444,-48.1908,-100.5535,0.34270809575166966,False
+QQQ,30,False,681,681,126,0.4127,0.4405,-0.0278,0.9368,-161.3952,-35.5352,-125.86,0.13692008020914284,False

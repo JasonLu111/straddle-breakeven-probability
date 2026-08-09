@@ -1,7 +1,9 @@
-# Research Report — Phase 1: Market Event Research
+# Research Report — Phase 1 & 2
 
 **Straddle Breakeven Probability Lab**
-**Status: Phase 1 complete (MVP tier — underlying price data only). Phases 2–4 not yet started.**
+**Status: Phase 1 & 2 complete (Full-research tier for H1/H2, real ORATS option chain data). Phases 3–4 not yet started.**
+
+## Part A: Phase 1 — Market Event Research
 
 ---
 
@@ -116,13 +118,103 @@ precedes expansion）。但這個簡單的單變量檢定顯示，在 SPY / QQQ 
   研究方向，而是把它當作誠實的 baseline：**任何後續模型都必須打敗「不做任何事」以及
   「單純看 compression 規則」這兩個 baseline**，而後者在本階段已經證明方向是負的。
 
-## 7. 下一步
+## Part B: Phase 2 — Breakeven Dataset（真實選擇權資料）
 
-Phase 2（Breakeven Dataset）需要真實歷史選擇權資料（bid/ask, IV, OI, delta），用以：
+### 1. 資料與方法
 
-1. 建立真正的 breakeven 門檻（`K ± (C0 + P0)`），而非本階段的「top-quartile 絕對報酬」代理事件；
-2. 計算 `target_expiry`（到期時是否突破）與扣除交易成本後的真實 PnL；
-3. 重新檢驗 H2：`P(突破 breakeven | compression)` 是否高於無條件機率——這是與 H1 不同
-   的問題，因為 breakeven 門檻本身會隨 compression 狀態下降（IV 通常也偏低）。
+| 項目 | 內容 |
+|---|---|
+| 資料來源 | ORATS Data API，History (EOD) 方案，`datav2/hist/strikes` endpoint |
+| 資料層級 | **Full-research tier** — 真實歷史 bid/ask、IV、delta、open interest |
+| 回測期間 | **2013-01-01 至 2026-08-07**（非 2007 年起，見下方「資料涵蓋範圍」） |
+| 進場規則 | 每週五進場，最接近 ATM 的 strike，20–40 DTE 中最接近 30 DTE 的到期日，持有至到期 |
+| 進場價格 | 主要：`(bid+ask)/2`；穩健性版本：買方全額支付 ask（`*_ask` 欄位） |
+| 交易成本 | 每口合約 commission（見 `configs/backtest.yaml`），選擇權乘數 100 |
 
-見任務追蹤：待使用者提供歷史選擇權資料來源（API / 檔案）後啟動。
+**資料涵蓋範圍**：實際測試發現，ORATS 雖然有 2007 年起的資料，但 SPY 在 2013 年之前
+的到期日高度集中在月選（DTE 約 8/16/44/72...），20–40 DTE 區間經常完全沒有對應合約
+可交易。抽樣 2009–2014 共 12 個交易日驗證後，確認從 2013 年起才穩定每週都有落在
+20–40 DTE 區間的到期日。因此本階段回測期間設為 2013–2026，而非假設「SPY 週選很早
+就存在」。
+
+**排除的週數**：SPY 690 週中排除 9 週（無 20–40 DTE 合約）與 4 週（尚未到期，屬最新
+未平倉部位，非資料缺陷）；QQQ 690 週排除 0 週（無合約）與 4 週（尚未到期）。排除週
+數不做任何插補，直接排除。
+
+**開發過程中發現並修正的兩個資料正確性問題**（詳見 `reports/limitations.md`）：
+
+1. ORATS 的 `expirDate` 對月選採用 OCC 慣例，標示為第三個星期五之後的星期六（結算
+   日），而非實際最後交易日（星期五）。已修正為自動回溯至到期日（含）之前最近的
+   實際交易日（3 天容忍度）。
+2. 到期損益計算原本誤用了 `adj_close`（股息調整後收盘價，用於 Phase 1 報酬率計算是
+   正確的），但選擇權履約結算應該對照**未經股息調整的實際成交價**。混用兩者會產生
+   長達十幾年股息調整累積造成的假性「20% 跳空」，已修正為使用 `close`。
+
+### 2. 主要結果：H2（Compression 是否提高真實 breakeven 機率）
+
+**Primary spec：SPY, 20th percentile threshold**
+
+| 統計量 | 數值 |
+|---|---|
+| 有效交易週數 | 681 |
+| Compression 週數 | 74 |
+| P(breakeven \| compression) | 41.9%（95% bootstrap CI: [31.1%, 52.7%]） |
+| P(breakeven) 無條件 | 41.6%（95% bootstrap CI: [37.7%, 45.4%]） |
+| Probability ratio | 1.008 |
+| 平均 net PnL (compression) | -$195.56 / 口 |
+| 平均 net PnL (normal) | -$38.89 / 口 |
+| Welch's t-test (PnL 差異) | p = 0.088 |
+
+**結論：H2 沒有被支持，但也沒有被拒絕——是一個乾淨的虛無結果（null result）。**
+Compression 狀態下的條件 breakeven 機率（41.9%）與無條件機率（41.6%）幾乎相同，
+兩者的 95% bootstrap 信賴區間高度重疊。這與 H1 的結果形成有意思的對比：
+
+- Phase 1（H1）：compression 下**未來絕對報酬顯著更小**（12 個規格全部同向顯著）。
+- Phase 2（H2）：compression 下**真實 breakeven 機率沒有顯著差異**。
+
+這正好驗證了 Phase 1 報告中提出的解讀假說：compression 狀態下 IV／權利金通常也同步
+偏低，breakeven 門檻本身會跟著收窄，兩個效應大致互相抵銷，使得「未來絕對報酬變小」
+不會直接轉化為「突破機率變小」。換句話說，**只看「未來會不會大漲大跌」是錯誤的分析
+單位；真正決定策略成敗的是「未來變動」相對「當下已支付的權利金」的比較**——這也是
+原始研究提案中特別強調 breakeven 機率而非單純方向性大幅波動的原因。
+
+### 3. 穩健性分析（Ticker × threshold）
+
+全部 6 個規格（SPY/QQQ × 10/20/30th percentile）的條件機率信賴區間都與無條件機率的
+信賴區間重疊，沒有一個規格達到統計顯著：
+
+| Ticker | Threshold | Compression n | P(breakeven\|comp) | P(breakeven) 無條件 | Ratio | Mean PnL (comp) | Mean PnL (normal) | Welch p |
+|---|---|---|---|---|---|---|---|---|
+| SPY | 10% | 26 | 46.2% | 41.6% | 1.11 | -$223.28 | -$49.27 | 0.201 |
+| SPY | 20% | 74 | 41.9% | 41.6% | 1.01 | -$195.56 | -$38.89 | 0.088 |
+| SPY | 30% | 145 | 43.4% | 41.6% | 1.05 | -$81.98 | -$48.86 | 0.633 |
+| QQQ | 10% | 33 | 42.4% | 44.1% | 0.96 | -$91.59 | -$57.15 | 0.834 |
+| QQQ | 20% | 72 | 41.7% | 44.1% | 0.95 | -$148.74 | -$48.19 | 0.343 |
+| QQQ | 30% | 126 | 41.3% | 44.1% | 0.94 | -$161.40 | -$35.54 | 0.137 |
+
+有一個值得留意但未達顯著的一致方向：**6 個規格中，compression 狀態下的平均 net PnL
+全部比 normal 狀態更差**（更負）。沒有任何一個單獨達到 5% 顯著水準（且未經多重檢定
+校正），樣本數也偏小（compression 子樣本僅 26–145 筆交易），統計檢定力有限。這是一
+個「有方向但證據不足」的觀察，不應過度解讀，但值得在 Phase 3/4 用更大樣本或更精細
+的模型重新檢驗，而不是直接當作可交易的訊號。
+
+### 4. 圖表
+
+- [`reports/figures/h2_breakeven_probability.png`](figures/h2_breakeven_probability.png) —
+  Compression vs normal regime 的真實 breakeven 機率比較。
+- [`reports/figures/h2_net_pnl_by_regime.png`](figures/h2_net_pnl_by_regime.png) —
+  兩種 regime 下的真實 net PnL 分布（已扣除交易成本）。
+
+### 5. 下一步
+
+Phase 3（Probability Model）建議方向，基於 Phase 1+2 的發現：
+
+1. 單一 compression 規則對 breakeven 機率**沒有**單變量預測力（H2 null result），因此
+   Phase 3 的多變量模型必須納入 option-cost features（`iv_minus_rv`、
+   `straddle_premium_pct` 等，Phase 2 資料已包含 `call_mid_iv`/`put_mid_iv`）而不能只用
+   價格壓縮特徵，否則不會比「不做任何事」的 baseline 更好。
+2. Compression 下 net PnL 偏負但未達顯著的觀察，適合作為 Phase 3 模型的一個檢查點：
+   如果多變量模型能夠顯著分離出「PnL 更負」的子群，就代表真的捕捉到單變量看不到
+   的交互作用；如果不能，則應誠實回報「此策略在本樣本中沒有可靠的統計邊際」。
+3. 樣本數限制（每週一筆觀察，13 年約 680 筆）意味著 walk-forward validation 的每個
+   fold 都會更小；Phase 3 需要謹慎設計 fold 數量與 calibration 方法，避免過度配適。

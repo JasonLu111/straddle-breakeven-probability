@@ -12,6 +12,23 @@ from src.backtest.straddle_pnl import compute_pnl
 from src.targets.breakeven import select_straddle_entry
 
 
+def _last_trading_day_on_or_before(trading_index: pd.DatetimeIndex, target_date: pd.Timestamp,
+                                     max_lag_days: int = 3) -> pd.Timestamp | None:
+    """ORATS lists standard monthly expirations by their OCC settlement date
+    (the Saturday after the third Friday), not the last trading day (Friday).
+    Falls back to the most recent trading day on/before `target_date`, within
+    `max_lag_days` calendar days, so weekend/holiday listed dates resolve to
+    the actual last trading day without silently reaching arbitrarily far back.
+    """
+    pos = trading_index.searchsorted(target_date, side="right") - 1
+    if pos < 0:
+        return None
+    candidate = trading_index[pos]
+    if (target_date - candidate).days > max_lag_days:
+        return None
+    return candidate
+
+
 def build_breakeven_dataset(ticker: str, backtest_cfg: dict, options_cache_dir: str = "data/raw/options") -> pd.DataFrame:
     underlying = pd.read_parquet(f"data/raw/underlying/{ticker}.parquet")
     underlying.index = pd.to_datetime(underlying.index)
@@ -41,10 +58,15 @@ def build_breakeven_dataset(ticker: str, backtest_cfg: dict, options_cache_dir: 
             continue
 
         expir_date = pd.Timestamp(entry.expir_date)
-        if expir_date not in underlying.index:
+        pricing_date = _last_trading_day_on_or_before(underlying.index, expir_date, max_lag_days=3)
+        if pricing_date is None:
             n_no_expiry_price += 1
             continue
-        expiry_price = float(underlying.loc[expir_date, "adj_close"])
+        # Use the raw close, not adj_close: option strikes/prices are quoted
+        # against the actual traded price, not the dividend-adjusted series
+        # used for the Phase 1 return/volatility calculations. Mixing the two
+        # would inject a spurious multi-decade dividend-adjustment gap here.
+        expiry_price = float(underlying.loc[pricing_date, "close"])
 
         pnl_mid = compute_pnl(
             entry, expiry_price,
@@ -63,6 +85,7 @@ def build_breakeven_dataset(ticker: str, backtest_cfg: dict, options_cache_dir: 
             "ticker": ticker,
             "trade_date": pd.Timestamp(trade_date),
             "expir_date": expir_date,
+            "pricing_date": pricing_date,
             "dte": entry.dte,
             "strike": entry.strike,
             "stock_price": entry.stock_price,

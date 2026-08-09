@@ -43,6 +43,22 @@ def _get_api_key() -> str:
     return api_key
 
 
+_ID_COLUMNS = {"ticker", "tradeDate", "expirDate", "quoteDate", "updatedAt", "expiryTod"}
+
+
+def _sanitize_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """ORATS occasionally returns a malformed/out-of-range numeric value on a
+    single row (observed: a `residualRate` value too large for int64, which
+    makes pyarrow's dtype inference raise on the whole column). Force every
+    non-identifier column through pd.to_numeric so a single bad cell becomes
+    NaN instead of crashing the parquet write.
+    """
+    for col in df.columns:
+        if col not in _ID_COLUMNS:
+            df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+    return df
+
+
 def fetch_chain_for_date(ticker: str, trade_date: str, cache_dir: str | Path = "data/raw/options",
                           force_refresh: bool = False) -> pd.DataFrame:
     """Fetch (or load from cache) the full option chain for `ticker` on `trade_date`
@@ -59,6 +75,8 @@ def fetch_chain_for_date(ticker: str, trade_date: str, cache_dir: str | Path = "
     resp.raise_for_status()
     payload = resp.json()
     df = pd.DataFrame(payload.get("data", []))
+    if not df.empty:
+        df = _sanitize_numeric_columns(df)
 
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache_path)
@@ -72,11 +90,17 @@ def fetch_chains_for_dates(ticker: str, trade_dates: list[str], cache_dir: str |
     live API call for dates not already cached, so reruns are cheap.
     """
     chains = {}
+    failed_dates = []
     n_fetched = 0
     for i, d in enumerate(trade_dates):
         cache_path = Path(cache_dir) / ticker / f"{d}.parquet"
         was_cached = cache_path.exists() and not force_refresh
-        df = fetch_chain_for_date(ticker, d, cache_dir, force_refresh)
+        try:
+            df = fetch_chain_for_date(ticker, d, cache_dir, force_refresh)
+        except Exception as exc:
+            print(f"  {ticker} {d}: FAILED ({type(exc).__name__}: {exc}) -- skipping")
+            failed_dates.append(d)
+            continue
         chains[d] = df
         if not was_cached:
             n_fetched += 1
@@ -84,5 +108,6 @@ def fetch_chains_for_dates(ticker: str, trade_dates: list[str], cache_dir: str |
             print(f"  {ticker}: {i + 1}/{len(trade_dates)} dates processed ({n_fetched} live-fetched)")
     if verbose:
         print(f"{ticker}: done. {len(trade_dates)} dates total, {n_fetched} fetched live, "
-              f"{len(trade_dates) - n_fetched} from cache.")
+              f"{len(trade_dates) - n_fetched - len(failed_dates)} from cache, "
+              f"{len(failed_dates)} failed: {failed_dates}")
     return chains

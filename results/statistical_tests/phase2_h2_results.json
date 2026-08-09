@@ -1,0 +1,218 @@
+[
+  {
+    "ticker": "SPY",
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 26,
+    "prob_p_unconditional": 0.4155653451,
+    "prob_p_unconditional_ci": [
+      0.3773861968,
+      0.4537444934
+    ],
+    "prob_p_conditional": 0.4615384615,
+    "prob_p_conditional_ci": [
+      0.2692307692,
+      0.6538461538
+    ],
+    "prob_probability_difference": 0.0459731165,
+    "prob_probability_ratio": 1.110627888,
+    "pnl_n_treatment": 26,
+    "pnl_n_control": 655,
+    "pnl_mean_treatment": -223.2808138334,
+    "pnl_mean_control": -49.2679070626,
+    "pnl_median_treatment": -14.0508850098,
+    "pnl_median_control": -118.3014648438,
+    "pnl_mean_difference": -174.0129067708,
+    "pnl_mean_difference_ci": [
+      -433.4329242476,
+      70.5546910739
+    ],
+    "pnl_welch_t_stat": -1.3070454632,
+    "pnl_welch_p_value": 0.2013416373,
+    "pnl_mannwhitney_u_stat": 8090.0,
+    "pnl_mannwhitney_p_value": 0.6661135154,
+    "pnl_welch_reject_bh": false
+  },
+  {
+    "ticker": "SPY",
+    "compression_threshold_pct": 20,
+    "is_primary_spec": true,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 74,
+    "prob_p_unconditional": 0.4155653451,
+    "prob_p_unconditional_ci": [
+      0.3773861968,
+      0.4537444934
+    ],
+    "prob_p_conditional": 0.4189189189,
+    "prob_p_conditional_ci": [
+      0.3108108108,
+      0.527027027
+    ],
+    "prob_probability_difference": 0.0033535738,
+    "prob_probability_ratio": 1.0080699074,
+    "pnl_n_treatment": 74,
+    "pnl_n_control": 607,
+    "pnl_mean_treatment": -195.5633699984,
+    "pnl_mean_control": -38.8864759568,
+    "pnl_median_treatment": -109.0502746582,
+    "pnl_median_control": -113.8002441406,
+    "pnl_mean_difference": -156.6768940416,
+    "pnl_mean_difference_ci": [
+      -333.0611751988,
+      19.5242156595
+    ],
+    "pnl_welch_t_stat": -1.7204139652,
+    "pnl_welch_p_value": 0.0881972063,
+    "pnl_mannwhitney_u_stat": 21028.0,
+    "pnl_mannwhitney_p_value": 0.3706184687,
+    "pnl_welch_reject_bh": false
+  },
+  {
+    "ticker": "SPY",
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 145,
+    "prob_p_unconditional": 0.4155653451,
+    "prob_p_unconditional_ci": [
+      0.3773861968,
+      0.4537444934
+    ],
+    "prob_p_conditional": 0.4344827586,
+    "prob_p_conditional_ci": [
+      0.3517241379,
+      0.5172413793
+    ],
+    "prob_probability_difference": 0.0189174135,
+    "prob_probability_ratio": 1.0455221153,
+    "pnl_n_treatment": 145,
+    "pnl_n_control": 536,
+    "pnl_mean_treatment": -81.9758178711,
+    "pnl_mean_control": -48.8606095044,
+    "pnl_median_treatment": -52.2993896484,
+    "pnl_median_control": -119.5498474121,
+    "pnl_mean_difference": -33.1152083667,
+    "pnl_mean_difference_ci": [
+      -170.2302367012,
+      102.3490515344
+    ],
+    "pnl_welch_t_stat": -0.4775782428,
+    "pnl_welch_p_value": 0.6332497946,
+    "pnl_mannwhitney_u_stat": 39946.0,
+    "pnl_mannwhitney_p_value": 0.6055122629,
+    "pnl_welch_reject_bh": false
+  },
+  {
+    "ticker": "QQQ",
+    "compression_threshold_pct": 10,
+    "is_primary_spec": false,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 33,
+    "prob_p_unconditional": 0.4405286344,
+    "prob_p_unconditional_ci": [
+      0.4038179148,
+      0.4787077827
+    ],
+    "prob_p_conditional": 0.4242424242,
+    "prob_p_conditional_ci": [
+      0.271969697,
+      0.6060606061
+    ],
+    "prob_probability_difference": -0.0162862101,
+    "prob_probability_ratio": 0.963030303,
+    "pnl_n_treatment": 33,
+    "pnl_n_control": 648,
+    "pnl_mean_treatment": -91.5878797127,
+    "pnl_mean_control": -57.1534190331,
+    "pnl_median_treatment": -151.2993896484,
+    "pnl_median_control": -69.5499542236,
+    "pnl_mean_difference": -34.4344606796,
+    "pnl_mean_difference_ci": [
+      -344.4706804828,
+      290.6852907337
+    ],
+    "pnl_welch_t_stat": -0.2112655364,
+    "pnl_welch_p_value": 0.8338651015,
+    "pnl_mannwhitney_u_stat": 10268.0,
+    "pnl_mannwhitney_p_value": 0.7008629872,
+    "pnl_welch_reject_bh": false
+  },
+  {
+    "ticker": "QQQ",
+    "compression_threshold_pct": 20,
+    "is_primary_spec": false,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 72,
+    "prob_p_unconditional": 0.4405286344,
+    "prob_p_unconditional_ci": [
+      0.4038179148,
+      0.4787077827
+    ],
+    "prob_p_conditional": 0.4166666667,
+    "prob_p_conditional_ci": [
+      0.3055555556,
+      0.5277777778
+    ],
+    "prob_probability_difference": -0.0238619677,
+    "prob_probability_ratio": 0.9458333333,
+    "pnl_n_treatment": 72,
+    "pnl_n_control": 609,
+    "pnl_mean_treatment": -148.7443868001,
+    "pnl_mean_control": -48.1908369694,
+    "pnl_median_treatment": -147.7996337891,
+    "pnl_median_control": -68.300213623,
+    "pnl_mean_difference": -100.5535498307,
+    "pnl_mean_difference_ci": [
+      -300.2083039957,
+      106.3372724905
+    ],
+    "pnl_welch_t_stat": -0.9533858178,
+    "pnl_welch_p_value": 0.3427080958,
+    "pnl_mannwhitney_u_stat": 20927.0,
+    "pnl_mannwhitney_p_value": 0.5278775936,
+    "pnl_welch_reject_bh": false
+  },
+  {
+    "ticker": "QQQ",
+    "compression_threshold_pct": 30,
+    "is_primary_spec": false,
+    "n_trades_total": 681,
+    "prob_n_total": 681,
+    "prob_n_condition_true": 126,
+    "prob_p_unconditional": 0.4405286344,
+    "prob_p_unconditional_ci": [
+      0.4038179148,
+      0.4787077827
+    ],
+    "prob_p_conditional": 0.4126984127,
+    "prob_p_conditional_ci": [
+      0.3253968254,
+      0.5
+    ],
+    "prob_probability_difference": -0.0278302217,
+    "prob_probability_ratio": 0.9368253968,
+    "pnl_n_treatment": 126,
+    "pnl_n_control": 555,
+    "pnl_mean_treatment": -161.3951874748,
+    "pnl_mean_control": -35.5351746705,
+    "pnl_median_treatment": -126.3001068115,
+    "pnl_median_control": -62.7996643066,
+    "pnl_mean_difference": -125.8600128043,
+    "pnl_mean_difference_ci": [
+      -286.5065088723,
+      40.1149899755
+    ],
+    "pnl_welch_t_stat": -1.4925095459,
+    "pnl_welch_p_value": 0.1369200802,
+    "pnl_mannwhitney_u_stat": 32904.0,
+    "pnl_mannwhitney_p_value": 0.3013379033,
+    "pnl_welch_reject_bh": false
+  }
+]

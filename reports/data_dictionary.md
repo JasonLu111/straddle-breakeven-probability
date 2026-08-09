@@ -48,9 +48,33 @@ Source: `data/processed/{TICKER}_phase1.parquet`, built by
 |---|---|
 | `fwd_abs_return_10d`, `fwd_abs_return_20d` | `\|ln(P_{t+h}) - ln(P_t)\|` — forward absolute log return. **Uses future data by construction; must never be used as a model input feature at time t.** |
 
-## Not yet populated (Phase 2+)
+## Phase 2: breakeven event dataset
 
-Option-cost features (`straddle_premium_pct`, `atm_implied_volatility`, `iv_minus_rv`,
-`days_to_expiry`, `bid_ask_spread_pct`, `put_call_iv_difference`) and breakeven targets
-(`target_expiry`, `target_path`, `target_positive_net_pnl`) require real historical
-option chain data and are not present in the current Phase 1 dataset.
+Source: `data/processed/{TICKER}_phase2_breakeven.parquet`, built by
+`src/targets/build_breakeven_dataset.py` from cached ORATS chains
+(`data/raw/options/{TICKER}/{date}.parquet`). One row per week (Friday entry,
+ATM strike, nearest-to-30-DTE expiration within 20-40 DTE).
+
+| Column | Description |
+|---|---|
+| `trade_date` | Entry date (Friday) |
+| `expir_date` | Listed expiration date (OCC convention -- may be a Saturday for standard monthly contracts) |
+| `pricing_date` | Actual trading day used to price expiry P&L (last trading day on/before `expir_date`, within a 3-day tolerance) |
+| `dte` | Days to expiration at entry |
+| `strike` | ATM strike selected |
+| `stock_price` | Underlying price at entry (from ORATS, matches the raw/unadjusted underlying series) |
+| `expiry_price` | Underlying **raw close** (not dividend-adjusted) on `pricing_date` -- mixing this with `adj_close` would inject a spurious dividend-adjustment gap, see the code comment in `build_breakeven_dataset.py` |
+| `premium_mid`, `premium_ask` | Total straddle premium: `(bid+ask)/2` per leg (primary) vs. paying full ask on both legs (conservative variant) |
+| `upper_breakeven_mid`, `lower_breakeven_mid` | `strike +/- premium_mid` |
+| `call_mid_iv`, `put_mid_iv` | ORATS mid IV for the selected contracts |
+| `call_open_interest`, `put_open_interest` | Open interest at entry |
+| `target_expiry` | 1 if `\|expiry_price - strike\| > premium_mid` (real breakeven event, mid-price basis) |
+| `gross_pnl`, `net_pnl` | Per-contract (100x) dollar P&L, before/after commission + slippage (see `configs/backtest.yaml`) |
+| `return_on_premium` | `net_pnl / (premium_mid * 100)` |
+| `target_positive_net_pnl` | 1 if `net_pnl > 0` |
+| `target_expiry_ask`, `net_pnl_ask`, `target_positive_net_pnl_ask` | Same definitions, ask-price entry variant |
+| `compression_regime_10/20/30`, `compression_regime` | Phase 1 regime flags, as of `trade_date` (joined from `{TICKER}_phase1.parquet`) |
+
+Weeks with no expiration in the [20,40] DTE window, or where the resolved
+`pricing_date` couldn't be matched within 3 days (e.g. trade not yet expired),
+are excluded rather than imputed -- see `reports/limitations.md` for counts.

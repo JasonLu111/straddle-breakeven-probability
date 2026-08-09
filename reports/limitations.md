@@ -40,11 +40,25 @@
   2013 onward, 2-3 expirations reliably fall in that window every week. Using
   data before 2013 would silently exclude most or all weeks, so the window was
   set empirically rather than assumed from memory of when SPY weeklies launched.
-- **Weeks with no expiration in the DTE window are excluded, not imputed.** See
-  the `n_no_expiration` count printed by `src/targets/build_breakeven_dataset.py`
-  and reported in `reports/research_report.md`. This is a form of missing-not-at-random
-  data (thin periods may correlate with market conditions) and is disclosed rather
-  than backfilled.
+- **Weeks with no expiration in the DTE window are excluded, not imputed.** SPY:
+  9/690 weeks excluded (no matching expiration), QQQ: 0/690. A further 4 weeks per
+  ticker are excluded because the entry hadn't reached expiration yet as of the
+  underlying price data's last available date (most recent open positions, not a
+  data defect). This is disclosed rather than backfilled or imputed.
+- **Expiration date convention**: ORATS lists standard monthly expirations by their
+  OCC settlement date (the Saturday after the third Friday), not the actual last
+  trading day. `build_breakeven_dataset.py::_last_trading_day_on_or_before` resolves
+  this to the most recent trading day within a 3-day tolerance -- this was caught
+  and fixed during development (see git history) after an initial version silently
+  dropped ~4% of trades whose listed expiration fell on a non-trading day.
+- **Raw vs. dividend-adjusted price**: the expiry price used to settle each straddle
+  is the underlying's raw `close`, not `adj_close`. `adj_close` is dividend-adjusted
+  for the Phase 1 return calculations and would introduce a multi-decade adjustment
+  gap (tens of dollars for SPY, compounding since the trade's era) if used to price
+  option payoffs against a strike quoted in real terms. This was also caught during
+  development -- an initial version using `adj_close` produced implausible ~20%
+  "moves" that were actually just the dividend adjustment. See the code comment in
+  `build_breakeven_dataset.py`.
 - **Entry price convention**: primary analysis uses `(bid+ask)/2` on both legs;
   a parallel ask-only ("pay full ask") variant is computed for every trade
   (`*_ask` columns) as the conservative transaction-cost sensitivity check the
