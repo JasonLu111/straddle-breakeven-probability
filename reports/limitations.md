@@ -28,6 +28,39 @@
 - **No transaction costs, no options liquidity constraints.** Not applicable yet since no
   strategy is being backtested in Phase 1.
 
+## Phase 2 (options data)
+
+- **Data source**: ORATS Data API, History (EOD) plan, `datav2/hist/strikes` endpoint.
+  Verified live against the actual subscription on 2026-08-09.
+- **Backtest window starts 2013-01-01, not earlier**, despite ORATS returning data
+  back to ~2007. Empirically checked (12 sample dates spanning 2009-2014): SPY
+  expirations landing in the 20-40 DTE entry window are essentially absent before
+  2013 (2009-2012 chains are dominated by monthly-cycle expirations whose DTEs
+  cluster around 8/16/44/72/... days, skipping the 20-40 window entirely). From
+  2013 onward, 2-3 expirations reliably fall in that window every week. Using
+  data before 2013 would silently exclude most or all weeks, so the window was
+  set empirically rather than assumed from memory of when SPY weeklies launched.
+- **Weeks with no expiration in the DTE window are excluded, not imputed.** See
+  the `n_no_expiration` count printed by `src/targets/build_breakeven_dataset.py`
+  and reported in `reports/research_report.md`. This is a form of missing-not-at-random
+  data (thin periods may correlate with market conditions) and is disclosed rather
+  than backfilled.
+- **Entry price convention**: primary analysis uses `(bid+ask)/2` on both legs;
+  a parallel ask-only ("pay full ask") variant is computed for every trade
+  (`*_ask` columns) as the conservative transaction-cost sensitivity check the
+  proposal calls for.
+- **PnL is quoted per-contract (100x multiplier)**, commission is a fixed
+  per-contract dollar amount from `configs/backtest.yaml` (2 legs: one call +
+  one put), and slippage is 0% by default (configurable). No bid-ask-spread
+  cost beyond the ask-vs-mid entry price comparison, and no separate exit-side
+  transaction cost is modeled (positions are held to expiration, not closed
+  early).
+- **Single ATM strike, single expiration per week** (closest available DTE to
+  30 within the 20-40 window; closest strike to the underlying price at entry).
+  No search across strikes/DTEs for a "better" straddle -- that would be a
+  second layer of data snooping on top of the regime-threshold sensitivity
+  already controlled for in Phase 1.
+
 ## Carried forward to later phases
 
 - Phase 2 will need to document the real option data source, its coverage period, and
